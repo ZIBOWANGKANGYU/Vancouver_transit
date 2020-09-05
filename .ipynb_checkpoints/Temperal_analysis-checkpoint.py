@@ -102,7 +102,8 @@ plt.savefig(os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version,
 ## Identify stops by whether busy or not
 stops_cnt_trips = stop_times.groupby("stop_id").agg(num_trips = pd.NamedAgg(column = "trip_id", aggfunc = lambda x: len(x.unique()))).sort_values(by = ['num_trips'])
 
-##Make histograms for the stops with most number of trips
+# ##Make histograms for the stops with most number of trips
+
 fig, axs = plt.subplots(2,5, figsize=(20, 6), sharex = True, sharey=True)
 fig.subplots_adjust(hspace = .5, wspace=.001)
 axs = axs.ravel()
@@ -111,6 +112,4 @@ for i in range(10):
     axs[i].set_title(stops_gdf.loc[stops_gdf['stop_id'] == stops_cnt_trips[-10:].index.tolist()[i]]['stop_name'].tolist()[0], fontsize = 11, wrap=True)
 fig.suptitle("Number of Services by Arrival Time: the busiest stops", fontsize=16)
 plt.savefig(os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version,'stops_bz_arr_t.png'))#Stops in Vancouver, Burnabay and west Richmond have later average arrival times than stops elsewhere
-
-
 
