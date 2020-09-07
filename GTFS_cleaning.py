@@ -165,7 +165,6 @@ with open(os.path.join(os.getcwd(), "Data_Tables", data_version,'routes.json'), 
 
 shapes_gdf.to_file(os.path.join(os.getcwd(), "Data_Tables", data_version,'shapes.json'), driver="GeoJSON")
 
-# +
 ##The stop_times table is very large in size. Remove some columns and break up the file to save them in batches.
 
 n_batch = len(stop_times) // 500000
