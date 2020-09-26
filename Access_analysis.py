@@ -296,3 +296,83 @@ print(
 )
 
 ### Duration of commuting
+GVA_DA_cmt_duration = GVA_DA_cmt
+
+GVA_DA_cmt_duration["prop_less_15"] = (
+    GVA_DA_cmt_duration["vn448"] / GVA_DA_cmt_duration["vn447"]
+)
+GVA_DA_cmt_duration["prop_15_29"] = (
+    GVA_DA_cmt_duration["vn449"] / GVA_DA_cmt_duration["vn447"]
+)
+GVA_DA_cmt_duration["prop_30_44"] = (
+    GVA_DA_cmt_duration["vn450"] / GVA_DA_cmt_duration["vn447"]
+)
+GVA_DA_cmt_duration["prop_45_59"] = (
+    GVA_DA_cmt_duration["vn451"] / GVA_DA_cmt_duration["vn447"]
+)
+GVA_DA_cmt_duration["prop_more_60"] = (
+    GVA_DA_cmt_duration["vn452"] / GVA_DA_cmt_duration["vn447"]
+)
+
+GVA_DA_cmt_duration.loc[
+    GVA_DA_cmt_duration["prop_less_15"] > 0.5, "med_commute_duration"
+] = 7.5
+GVA_DA_cmt_duration.loc[
+    (GVA_DA_cmt_duration["prop_less_15"] <= 0.5)
+    & (GVA_DA_cmt_duration["prop_less_15"] + GVA_DA_cmt_duration["prop_15_29"] > 0.5),
+    "med_commute_duration",
+] = 22.5
+GVA_DA_cmt_duration.loc[
+    (GVA_DA_cmt_duration["prop_less_15"] + GVA_DA_cmt_duration["prop_15_29"] <= 0.5)
+    & (
+        GVA_DA_cmt_duration["prop_less_15"]
+        + GVA_DA_cmt_duration["prop_15_29"]
+        + GVA_DA_cmt_duration["prop_30_44"]
+        > 0.5
+    ),
+    "med_commute_duration",
+] = 37.5
+GVA_DA_cmt_duration.loc[
+    (
+        GVA_DA_cmt_duration["prop_less_15"]
+        + GVA_DA_cmt_duration["prop_15_29"]
+        + GVA_DA_cmt_duration["prop_30_44"]
+        <= 0.5
+    )
+    & (
+        GVA_DA_cmt_duration["prop_less_15"]
+        + GVA_DA_cmt_duration["prop_15_29"]
+        + GVA_DA_cmt_duration["prop_30_44"]
+        + GVA_DA_cmt_duration["prop_45_59"]
+        > 0.5
+    ),
+    "med_commute_duration",
+] = 52.5
+GVA_DA_cmt_duration.loc[
+    (
+        GVA_DA_cmt_duration["prop_less_15"]
+        + GVA_DA_cmt_duration["prop_15_29"]
+        + GVA_DA_cmt_duration["prop_30_44"]
+        + GVA_DA_cmt_duration["prop_45_59"]
+        <= 0.5
+    ),
+    "med_commute_duration",
+] = 60
+
+#### Maps of DAs by duration of commute
+DA_cmt_duration_ax = GVA_DA_cmt_duration.plot(
+    figsize=(20, 20),
+    alpha=0.5,
+    column="prop_public",
+    cmap="Greens",
+    legend=True,
+    scheme="quantiles",
+)
+ctx.add_basemap(DA_public_cmt_ax, zoom=12)
+plt.title("Proportion of population using public transportation")
+
+plt.savefig(
+    os.path.join(
+        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_public_prop.png"
+    )
+)
