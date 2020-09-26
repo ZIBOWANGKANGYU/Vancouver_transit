@@ -165,22 +165,17 @@ with open(os.path.join(os.getcwd(), "Data_Tables", data_version,'routes.json'), 
 
 shapes_gdf.to_file(os.path.join(os.getcwd(), "Data_Tables", data_version,'shapes.json'), driver="GeoJSON")
 
-# +
-##The stop_times table is very large in size. Remove some columns and break up the file to save them in batches.
+# #The stop_times table is very large in size. Remove some columns and break up the file to save them in batches.
 
-n_batch = len(stop_times) // 500000
+n_batch = len(stop_times) // 200000
 
 for i in range(n_batch + 1):
-    stop_times_b = stop_times.iloc[i * 500000: min((i + 1) * 500000, len(stop_times))]
+    stop_times_b = stop_times.iloc[i * 200000: min((i + 1) * 200000, len(stop_times))]
     filename = "stop_times" + str(i) + ".json"
     with open(os.path.join(os.getcwd(), "Data_Tables", data_version, filename), "w+") as stop_times_outfile:
         json.dump(stop_times_b.to_json(), stop_times_outfile) 
-# -
 
 stops_gdf.to_file(os.path.join(os.getcwd(), "Data_Tables", data_version,'stops.json'), driver="GeoJSON")
 
 with open(os.path.join(os.getcwd(), "Data_Tables", data_version,'trips.json'), "w+") as trips_outfile:
     json.dump(trips.to_json(), trips_outfile)
-
-
-
