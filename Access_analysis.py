@@ -81,15 +81,30 @@ with open(
 ) as trips_outfile:
     trips = pd.read_json(json.load(trips_outfile))
 
-# # Mapping DAs
-
+## Mapping DAs
 ### Create base map
 GVA_DA = GVA_DA.to_crs(epsg=3857)
 GVA_base = GVA_DA.drop(GVA_DA.columns[28:-1], axis=1)
 
-### Population
+### Summarize variables
+DA_feature_summary = GVA_DA.iloc[:, 35:42].describe()
+DA_feature_summary.rename(columns={"oldName1": "newName1", "oldName2": "newName2"})
+
+### Example: Burnaby DA
 import contextily as ctx
 import matplotlib.pyplot as plt
+
+GVA_DA_Burnaby = GVA_DA[GVA_DA["CSDNAME"] == "Burnaby"]
+DA_Burnaby_ax = GVA_DA_Burnaby.plot(edgecolor="red", figsize=(20, 20), alpha=0.5)
+ctx.add_basemap(DA_Burnaby_ax, zoom=12)
+plt.title("DAs in Burnaby CSD")
+plt.savefig(
+    os.path.join(
+        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_Burnaby.png"
+    )
+)
+
+### Population
 
 GVA_DA_pop = pd.concat([GVA_base, GVA_DA[["vn13"]]], axis=1)
 GVA_DA_pop_ax = GVA_DA_pop.plot(
@@ -363,16 +378,19 @@ GVA_DA_cmt_duration.loc[
 DA_cmt_duration_ax = GVA_DA_cmt_duration.plot(
     figsize=(20, 20),
     alpha=0.5,
-    column="prop_public",
-    cmap="Greens",
+    column="med_commute_duration",
+    cmap="OrRd",
     legend=True,
-    scheme="quantiles",
 )
-ctx.add_basemap(DA_public_cmt_ax, zoom=12)
-plt.title("Proportion of population using public transportation")
+ctx.add_basemap(DA_cmt_duration_ax, zoom=12)
+plt.title("Average Commuting Time")
 
 plt.savefig(
     os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_public_prop.png"
+        os.getcwd(),
+        "Vancouver_transit",
+        "Maps",
+        data_version,
+        "DA_commute_duration.png",
     )
 )
