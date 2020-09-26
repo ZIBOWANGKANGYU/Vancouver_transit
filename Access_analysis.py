@@ -244,6 +244,24 @@ plt.savefig(
     )
 )
 
+#### Maps of DAs by quantiles of public transportation proportions
+DA_public_cmt_ax = GVA_DA_cmt.plot(
+    figsize=(20, 20),
+    alpha=0.5,
+    column="prop_public",
+    cmap="Greens",
+    legend=True,
+    scheme="quantiles",
+)
+ctx.add_basemap(DA_public_cmt_ax, zoom=12)
+plt.title("Proportion of population using public transportation")
+
+plt.savefig(
+    os.path.join(
+        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_public_prop.png"
+    )
+)
+
 GVA_CSD_cmt_mode = GVA_DA_cmt.dissolve(by="CSDNAME", aggfunc="sum")
 
 GVA_CSD_cmt_mode["prop_private_driver"] = (
@@ -253,5 +271,28 @@ GVA_CSD_cmt_mode["prop_private_passenger"] = (
     GVA_CSD_cmt_mode["vn442"] / GVA_CSD_cmt_mode["vn440"]
 )
 GVA_CSD_cmt_mode["prop_public"] = GVA_CSD_cmt_mode["vn443"] / GVA_CSD_cmt_mode["vn440"]
-GVA_CSD_cmt_mode["walk"] = GVA_CSD_cmt_mode["vn444"] / GVA_CSD_cmt_mode["vn440"]
-GVA_CSD_cmt_mode["bicycle"] = GVA_CSD_cmt_mode["vn445"] / GVA_CSD_cmt_mode["vn440"]
+GVA_CSD_cmt_mode["prop_walk"] = GVA_CSD_cmt_mode["vn444"] / GVA_CSD_cmt_mode["vn440"]
+GVA_CSD_cmt_mode["prop_bicycle"] = GVA_CSD_cmt_mode["vn445"] / GVA_CSD_cmt_mode["vn440"]
+
+GVA_CSD_cmt_mode.sort_values(by="prop_public", ascending=False)
+
+GVA_public_prop = sum(GVA_CSD_cmt_dest["vn443"]) / sum(GVA_CSD_cmt_dest["vn440"])
+
+CSD_max_public = GVA_CSD_cmt_mode[
+    GVA_CSD_cmt_mode.prop_public == max(GVA_CSD_cmt_mode.prop_public)
+].index[0]
+CSD_min_public = GVA_CSD_cmt_mode[
+    GVA_CSD_cmt_mode.prop_public == min(GVA_CSD_cmt_mode.prop_public)
+].index[0]
+
+print(
+    f"In the Greater Vancouver Area, {GVA_public_prop:.1%} of residents commute using public transportation."
+)
+print(
+    f"{CSD_max_public} has the highest proportion of residents ({max(GVA_CSD_cmt_mode.prop_public):.1%}) commuting using public transportation."
+)
+print(
+    f"{CSD_min_public} has the lowest proportion of residents ({min(GVA_CSD_cmt_mode.prop_public):.1%}) commuting using public transportation."
+)
+
+### Duration of commuting
