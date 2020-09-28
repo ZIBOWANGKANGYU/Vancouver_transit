@@ -87,8 +87,22 @@ GVA_DA = GVA_DA.to_crs(epsg=3857)
 GVA_base = GVA_DA.drop(GVA_DA.columns[28:-1], axis=1)
 
 ### Summarize variables
-DA_feature_summary = GVA_DA.iloc[:, 35:42].describe()
-DA_feature_summary.rename(columns={"oldName1": "newName1", "oldName2": "newName2"})
+from tabulate import tabulate
+
+DA_feature_summary = GVA_DA.iloc[:, 35:42].describe().round(decimals=1)
+DA_feature_summary = DA_feature_summary.rename(
+    columns={
+        "vn13": "pop_2016",
+        "vn16": "total_private_dwellings",
+        "vn17": "total_private_dwellings_usual",
+        "vn18": "pop_per_km2",
+        "vn19": "land_area_km2",
+    }
+)
+DA_feature_summary = DA_feature_summary.loc["mean":"max"]
+print(
+    tabulate(DA_feature_summary, DA_feature_summary.columns.tolist(), tablefmt="github")
+)
 
 ### Example: Burnaby DA
 import contextily as ctx
