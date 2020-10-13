@@ -152,7 +152,7 @@ plt.savefig(
     )
 )
 
-###Busiest routes
+###Busiest stops
 stops_gdf = stops_gdf.to_crs(epsg=3857)  # Convert to web mercator
 
 stops_gdf_bz = stops_gdf.loc[

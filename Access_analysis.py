@@ -81,11 +81,6 @@ with open(
 ) as trips_outfile:
     trips = pd.read_json(json.load(trips_outfile))
 
-## Mapping DAs
-### Create base map
-GVA_DA = GVA_DA.to_crs(epsg=3857)
-GVA_base = GVA_DA.drop(GVA_DA.columns[28:-1], axis=1)
-
 ### Summarize variables
 from tabulate import tabulate
 
@@ -103,6 +98,11 @@ DA_feature_summary = DA_feature_summary.loc["mean":"max"]
 print(
     tabulate(DA_feature_summary, DA_feature_summary.columns.tolist(), tablefmt="github")
 )
+
+## Mapping DAs
+### Create base map
+GVA_DA = GVA_DA.to_crs(epsg=3857)
+GVA_base = GVA_DA.drop(GVA_DA.columns[28:-1], axis=1)
 
 ### Example: Burnaby DA
 import contextily as ctx
@@ -167,244 +167,29 @@ plt.savefig(
     )
 )
 
-## Mode of commuting: data from 2016 census
-GVA_DA_cmt = pd.concat([GVA_base, GVA_DA[GVA_DA.columns[457:482]]], axis=1)
+# Calculate access
 
-### Destination
+### Define "Neighborhood Area": original DA with 500m buffer zone
+GVA_DA_NBA = GVA_DA.copy()
+GVA_DA_NBA["geometry"] = GVA_DA_NBA.geometry.buffer(500)
 
-GVA_CSD_cmt_dest = GVA_DA_cmt.dissolve(by="CSDNAME", aggfunc="sum")
+## Two measurements of access to public transit infrastructure
+### Number of physical stops (per resident)
+GVA_DA_NBA_stops = geopandas.sjoin(GVA_DA_NBA, stops_gdf, how="left", op="intersects")
+GVA_DA_NBA_stops_count = (
+    GVA_DA_NBA_stops.groupby("DAUID")["stop_code"].count().rename("DA_NBA_stops_count")
+)
+GVA_DA_Access = GVA_DA.merge(GVA_DA_NBA_stops_count, on="DAUID")
 
-GVA_CSD_cmt_dest["prop_within_CSD"] = (
-    GVA_CSD_cmt_dest["vn436"] / GVA_CSD_cmt_dest["vn435"]
+### Number services in region (per resident)
+stops_cnt_services = stop_times.groupby("stop_id").size().rename("stop_cnt_services")
+stops_gdf_cnt_services = stops_gdf.join(stops_cnt_services, on="stop_id", how="left")
+GVA_DA_NBA_stops_cnt_services = geopandas.sjoin(
+    GVA_DA_NBA, stops_gdf_cnt_services, how="left", op="intersects"
 )
-GVA_CSD_cmt_dest["prop_within_CD"] = (
-    GVA_CSD_cmt_dest["vn437"] / GVA_CSD_cmt_dest["vn435"]
+GVA_DA_NBA_services_count = (
+    GVA_DA_NBA_stops_cnt_services.groupby("DAUID")["stop_cnt_services"]
+    .sum()
+    .rename("DA_NBA_services_count")
 )
-GVA_CSD_cmt_dest["prop_within_province"] = (
-    GVA_CSD_cmt_dest["vn438"] / GVA_CSD_cmt_dest["vn435"]
-)
-GVA_CSD_cmt_dest["prop_out_province"] = (
-    GVA_CSD_cmt_dest["vn439"] / GVA_CSD_cmt_dest["vn435"]
-)
-
-CSD_max_within_CSD = GVA_CSD_cmt_dest[
-    GVA_CSD_cmt_dest.prop_within_CSD == max(GVA_CSD_cmt_dest.prop_within_CSD)
-].index[0]
-CSD_min_within_CSD = GVA_CSD_cmt_dest[
-    GVA_CSD_cmt_dest.prop_within_CSD == min(GVA_CSD_cmt_dest.prop_within_CSD)
-].index[0]
-
-GVA_CSD_cmt_dest.sort_values(by="prop_within_CSD", ascending=False)
-
-GVA_within_CSD_prop = sum(GVA_CSD_cmt_dest["vn436"]) / sum(GVA_CSD_cmt_dest["vn435"])
-
-print(
-    f"In the Greater Vancouver Area, {GVA_within_CSD_prop:.1%} of residents commute within their CSDs"
-)
-print(
-    f"{CSD_max_within_CSD} has the highest proportion of residents ({max(GVA_CSD_cmt_dest.prop_within_CSD):.1%}) commuting within the CSD."
-)
-print(
-    f"{CSD_min_within_CSD} has the lowest proportion of residents ({min(GVA_CSD_cmt_dest.prop_within_CSD):.1%}) commuting within the CSD."
-)
-
-CSD_within_CSD_ax = GVA_CSD_cmt_dest.plot(
-    figsize=(20, 20), alpha=0.5, column="prop_within_CSD", cmap="OrRd", legend=True
-)
-ctx.add_basemap(CSD_within_CSD_ax, zoom=12)
-plt.title("Proportion of population transitting within CSD")
-
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "commut_within_csd.png"
-    )
-)
-
-### Mode of commuting
-GVA_DA_cmt_mode = GVA_DA_cmt
-
-GVA_DA_cmt_mode["prop_private_driver"] = (
-    GVA_DA_cmt_mode["vn441"] / GVA_DA_cmt_mode["vn440"]
-)
-GVA_DA_cmt_mode["prop_private_passenger"] = (
-    GVA_DA_cmt_mode["vn442"] / GVA_DA_cmt_mode["vn440"]
-)
-GVA_DA_cmt_mode["prop_public"] = GVA_DA_cmt_mode["vn443"] / GVA_DA_cmt_mode["vn440"]
-GVA_DA_cmt_mode["prop_walk"] = GVA_DA_cmt_mode["vn444"] / GVA_DA_cmt_mode["vn440"]
-GVA_DA_cmt_mode["bicycle"] = GVA_DA_cmt_mode["vn445"] / GVA_DA_cmt_mode["vn440"]
-
-#### Histogram of distribution of proportion of commute mode use across DAs
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-GVA_DA_cmt_mode_hist = GVA_DA_cmt_mode.melt(
-    id_vars=["DAUID"],
-    value_vars=[
-        "prop_private_driver",
-        "prop_private_passenger",
-        "prop_public",
-        "prop_walk",
-        "bicycle",
-    ],
-)
-GVA_DA_cmt_mode_hist = GVA_DA_cmt_mode_hist.rename(
-    columns={"variable": "mode", "value": "prop"}
-)
-
-sns.displot(GVA_DA_cmt_mode_hist, x="prop", hue="mode", kind="kde", fill=True)
-plt.title("Proportion of commuters by mode of transportation in Greater Vancouver Area")
-plt.savefig(
-    os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_mode.png")
-)
-
-sns.displot(
-    GVA_DA_cmt_mode_hist.query("mode !='bicycle'"),
-    x="prop",
-    hue="mode",
-    kind="kde",
-    fill=True,
-)
-plt.title(
-    "Proportion of commuters by mode of transportation in Greater Vancouver Area (Excluding Bicycle)"
-)
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_mode_exl_bi.png"
-    )
-)
-
-#### Maps of DAs by quantiles of public transportation proportions
-DA_public_cmt_ax = GVA_DA_cmt.plot(
-    figsize=(20, 20),
-    alpha=0.5,
-    column="prop_public",
-    cmap="Greens",
-    legend=True,
-    scheme="quantiles",
-)
-ctx.add_basemap(DA_public_cmt_ax, zoom=12)
-plt.title("Proportion of population using public transportation")
-
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_public_prop.png"
-    )
-)
-
-GVA_CSD_cmt_mode = GVA_DA_cmt.dissolve(by="CSDNAME", aggfunc="sum")
-
-GVA_CSD_cmt_mode["prop_private_driver"] = (
-    GVA_CSD_cmt_mode["vn441"] / GVA_CSD_cmt_mode["vn440"]
-)
-GVA_CSD_cmt_mode["prop_private_passenger"] = (
-    GVA_CSD_cmt_mode["vn442"] / GVA_CSD_cmt_mode["vn440"]
-)
-GVA_CSD_cmt_mode["prop_public"] = GVA_CSD_cmt_mode["vn443"] / GVA_CSD_cmt_mode["vn440"]
-GVA_CSD_cmt_mode["prop_walk"] = GVA_CSD_cmt_mode["vn444"] / GVA_CSD_cmt_mode["vn440"]
-GVA_CSD_cmt_mode["prop_bicycle"] = GVA_CSD_cmt_mode["vn445"] / GVA_CSD_cmt_mode["vn440"]
-
-GVA_CSD_cmt_mode.sort_values(by="prop_public", ascending=False)
-
-GVA_public_prop = sum(GVA_CSD_cmt_dest["vn443"]) / sum(GVA_CSD_cmt_dest["vn440"])
-
-CSD_max_public = GVA_CSD_cmt_mode[
-    GVA_CSD_cmt_mode.prop_public == max(GVA_CSD_cmt_mode.prop_public)
-].index[0]
-CSD_min_public = GVA_CSD_cmt_mode[
-    GVA_CSD_cmt_mode.prop_public == min(GVA_CSD_cmt_mode.prop_public)
-].index[0]
-
-print(
-    f"In the Greater Vancouver Area, {GVA_public_prop:.1%} of residents commute using public transportation."
-)
-print(
-    f"{CSD_max_public} has the highest proportion of residents ({max(GVA_CSD_cmt_mode.prop_public):.1%}) commuting using public transportation."
-)
-print(
-    f"{CSD_min_public} has the lowest proportion of residents ({min(GVA_CSD_cmt_mode.prop_public):.1%}) commuting using public transportation."
-)
-
-### Duration of commuting
-GVA_DA_cmt_duration = GVA_DA_cmt
-
-GVA_DA_cmt_duration["prop_less_15"] = (
-    GVA_DA_cmt_duration["vn448"] / GVA_DA_cmt_duration["vn447"]
-)
-GVA_DA_cmt_duration["prop_15_29"] = (
-    GVA_DA_cmt_duration["vn449"] / GVA_DA_cmt_duration["vn447"]
-)
-GVA_DA_cmt_duration["prop_30_44"] = (
-    GVA_DA_cmt_duration["vn450"] / GVA_DA_cmt_duration["vn447"]
-)
-GVA_DA_cmt_duration["prop_45_59"] = (
-    GVA_DA_cmt_duration["vn451"] / GVA_DA_cmt_duration["vn447"]
-)
-GVA_DA_cmt_duration["prop_more_60"] = (
-    GVA_DA_cmt_duration["vn452"] / GVA_DA_cmt_duration["vn447"]
-)
-
-GVA_DA_cmt_duration.loc[
-    GVA_DA_cmt_duration["prop_less_15"] > 0.5, "med_commute_duration"
-] = 7.5
-GVA_DA_cmt_duration.loc[
-    (GVA_DA_cmt_duration["prop_less_15"] <= 0.5)
-    & (GVA_DA_cmt_duration["prop_less_15"] + GVA_DA_cmt_duration["prop_15_29"] > 0.5),
-    "med_commute_duration",
-] = 22.5
-GVA_DA_cmt_duration.loc[
-    (GVA_DA_cmt_duration["prop_less_15"] + GVA_DA_cmt_duration["prop_15_29"] <= 0.5)
-    & (
-        GVA_DA_cmt_duration["prop_less_15"]
-        + GVA_DA_cmt_duration["prop_15_29"]
-        + GVA_DA_cmt_duration["prop_30_44"]
-        > 0.5
-    ),
-    "med_commute_duration",
-] = 37.5
-GVA_DA_cmt_duration.loc[
-    (
-        GVA_DA_cmt_duration["prop_less_15"]
-        + GVA_DA_cmt_duration["prop_15_29"]
-        + GVA_DA_cmt_duration["prop_30_44"]
-        <= 0.5
-    )
-    & (
-        GVA_DA_cmt_duration["prop_less_15"]
-        + GVA_DA_cmt_duration["prop_15_29"]
-        + GVA_DA_cmt_duration["prop_30_44"]
-        + GVA_DA_cmt_duration["prop_45_59"]
-        > 0.5
-    ),
-    "med_commute_duration",
-] = 52.5
-GVA_DA_cmt_duration.loc[
-    (
-        GVA_DA_cmt_duration["prop_less_15"]
-        + GVA_DA_cmt_duration["prop_15_29"]
-        + GVA_DA_cmt_duration["prop_30_44"]
-        + GVA_DA_cmt_duration["prop_45_59"]
-        <= 0.5
-    ),
-    "med_commute_duration",
-] = 60
-
-#### Maps of DAs by duration of commute
-DA_cmt_duration_ax = GVA_DA_cmt_duration.plot(
-    figsize=(20, 20),
-    alpha=0.5,
-    column="med_commute_duration",
-    cmap="OrRd",
-    legend=True,
-)
-ctx.add_basemap(DA_cmt_duration_ax, zoom=12)
-plt.title("Average Commuting Time")
-
-plt.savefig(
-    os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
-        "Maps",
-        data_version,
-        "DA_commute_duration.png",
-    )
-)
+GVA_DA_Access = GVA_DA_Access.merge(GVA_DA_NBA_services_count, on="DAUID")
