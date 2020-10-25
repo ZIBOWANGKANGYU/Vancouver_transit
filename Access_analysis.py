@@ -104,9 +104,10 @@ print(
 GVA_DA = GVA_DA.to_crs(epsg=3857)
 GVA_base = GVA_DA.drop(GVA_DA.columns[28:-1], axis=1)
 
-### Example: Burnaby DA
 import contextily as ctx
 import matplotlib.pyplot as plt
+
+### Example: Burnaby DA
 
 GVA_DA_Burnaby = GVA_DA[GVA_DA["CSDNAME"] == "Burnaby"]
 DA_Burnaby_ax = GVA_DA_Burnaby.plot(edgecolor="red", figsize=(20, 20), alpha=0.5)
@@ -181,6 +182,28 @@ GVA_DA_NBA_stops_count = (
 )
 GVA_DA_Access = GVA_DA.merge(GVA_DA_NBA_stops_count, on="DAUID")
 
+GVA_DA_Access["NBA_stops_PC"] = (
+    GVA_DA_Access["DA_NBA_stops_count"] / GVA_DA_Access["vn13"]
+)
+
+### Mapping the top 10%
+GVA_DA_stops_PC = pd.concat([GVA_base, GVA_DA_Access[["NBA_stops_PC"]]], axis=1)
+GVA_DA_stops_PC = GVA_DA_stops_PC[
+    GVA_DA_stops_PC.NBA_stops_PC >= GVA_DA_stops_PC.NBA_stops_PC.quantile(0.9)
+]
+
+GVA_DA_stops_PC_ax = GVA_DA_stops_PC.plot(
+    figsize=(20, 20), alpha=0.5, legend=True, color="r"
+)
+ctx.add_basemap(GVA_DA_stops_PC_ax, zoom=12)
+plt.title("Top 10% Dissemination Areas by Access to Transit Stops per Capita")
+
+plt.savefig(
+    os.path.join(
+        os.getcwd(), "Vancouver_transit", "Maps", data_version, "NBA_stops_PC_10pc.png"
+    )
+)
+
 ### Number services in region (per resident)
 stops_cnt_services = stop_times.groupby("stop_id").size().rename("stop_cnt_services")
 stops_gdf_cnt_services = stops_gdf.join(stops_cnt_services, on="stop_id", how="left")
@@ -193,3 +216,25 @@ GVA_DA_NBA_services_count = (
     .rename("DA_NBA_services_count")
 )
 GVA_DA_Access = GVA_DA_Access.merge(GVA_DA_NBA_services_count, on="DAUID")
+
+GVA_DA_Access["NBA_services_PC"] = (
+    GVA_DA_Access["DA_NBA_services_count"] / GVA_DA_Access["vn13"]
+)
+
+### Mapping the top 10%
+GVA_DA_stops_PC = pd.concat([GVA_base, GVA_DA_Access[["NBA_stops_PC"]]], axis=1)
+GVA_DA_stops_PC = GVA_DA_stops_PC[
+    GVA_DA_stops_PC.NBA_stops_PC >= GVA_DA_stops_PC.NBA_stops_PC.quantile(0.9)
+]
+
+GVA_DA_stops_PC_ax = GVA_DA_stops_PC.plot(
+    figsize=(20, 20), alpha=0.5, legend=True, color="r"
+)
+ctx.add_basemap(GVA_DA_stops_PC_ax, zoom=12)
+plt.title("Top 10% Dissemination Areas by Access to Transit Stops per Capita")
+
+plt.savefig(
+    os.path.join(
+        os.getcwd(), "Vancouver_transit", "Maps", data_version, "NBA_stops_PC_10pc.png"
+    )
+)
