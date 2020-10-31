@@ -10,15 +10,17 @@ data_version = "20200606"
 import os
 import re
 import numpy as np
+import contextily as ctx
+import pandas as pd
+import json
+import geopandas
+import matplotlib.pyplot as plt
 
 cwd = os.path.dirname(os.getcwd())
 os.chdir(cwd)
 data_dir = os.path.join(os.getcwd(), "TL_data", data_version)
 
 # Read intermediate data
-import pandas as pd
-import json
-import geopandas
 
 GVA_DA = geopandas.read_file(
     os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_data.shp")
@@ -90,6 +92,19 @@ GVA_DA_cmt = pd.concat([GVA_base, GVA_DA[GVA_DA.columns[457:482]]], axis=1)
 
 ### Destination
 
+GVA_DA_cmt_dest = GVA_DA_cmt.copy()
+
+GVA_DA_cmt_dest["prop_within_CSD"] = GVA_DA_cmt_dest["vn436"] / GVA_DA_cmt_dest["vn435"]
+GVA_DA_cmt_dest["prop_within_CD"] = GVA_DA_cmt_dest["vn437"] / GVA_DA_cmt_dest["vn435"]
+GVA_DA_cmt_dest["prop_within_province"] = (
+    GVA_DA_cmt_dest["vn438"] / GVA_DA_cmt_dest["vn435"]
+)
+GVA_DA_cmt_dest["prop_out_province"] = (
+    GVA_DA_cmt_dest["vn439"] / GVA_DA_cmt_dest["vn435"]
+)
+
+#### CSD level
+
 GVA_CSD_cmt_dest = GVA_DA_cmt.dissolve(by="CSDNAME", aggfunc="sum")
 
 GVA_CSD_cmt_dest["prop_within_CSD"] = (
@@ -139,7 +154,7 @@ plt.savefig(
 )
 
 ### Mode of commuting
-GVA_DA_cmt_mode = GVA_DA_cmt
+GVA_DA_cmt_mode = GVA_DA_cmt.copy()
 
 GVA_DA_cmt_mode["prop_private_driver"] = (
     GVA_DA_cmt_mode["vn441"] / GVA_DA_cmt_mode["vn440"]
@@ -192,7 +207,7 @@ plt.savefig(
 )
 
 #### Maps of DAs by quantiles of public transportation proportions
-DA_public_cmt_ax = GVA_DA_cmt.plot(
+DA_public_cmt_ax = GVA_DA_cmt_mode.plot(
     figsize=(20, 20),
     alpha=0.5,
     column="prop_public",
@@ -209,6 +224,7 @@ plt.savefig(
     )
 )
 
+#### CSD level
 GVA_CSD_cmt_mode = GVA_DA_cmt.dissolve(by="CSDNAME", aggfunc="sum")
 
 GVA_CSD_cmt_mode["prop_private_driver"] = (
@@ -243,7 +259,7 @@ print(
 )
 
 ### Duration of commuting
-GVA_DA_cmt_duration = GVA_DA_cmt
+GVA_DA_cmt_duration = GVA_DA_cmt.copy()
 
 GVA_DA_cmt_duration["prop_less_15"] = (
     GVA_DA_cmt_duration["vn448"] / GVA_DA_cmt_duration["vn447"]
@@ -326,6 +342,8 @@ plt.savefig(
         "DA_commute_duration.png",
     )
 )
+
+#### CSD level
 
 GVA_CSD_cmt_duration = GVA_DA_cmt_duration.dissolve(by="CSDNAME", aggfunc="sum")
 GVA_CSD_cmt_duration = GVA_CSD_cmt_duration[
@@ -415,3 +433,35 @@ print(
 print(
     f"{CSD_min_commute_duration} has the lowest medium commuting time, which is {min(GVA_CSD_cmt_duration.med_commute_duration):.1f} minutes."
 )
+
+# Export files
+GVA_DA_cmt_usage = pd.concat(
+    [
+        GVA_DA_cmt_dest,
+        GVA_DA_cmt_dest.loc[
+            :,
+            [
+                "prop_within_CSD",
+                "prop_within_CD",
+                "prop_within_province",
+                "prop_out_province",
+            ],
+        ],
+        GVA_DA_cmt_duration.loc[
+            :,
+            [
+                "prop_less_15",
+                "prop_15_29",
+                "prop_30_44",
+                "prop_45_59",
+                "prop_more_60",
+                "med_commute_duration",
+            ],
+        ],
+    ],
+    axis=1,
+)
+
+# GVA_DA_cmt_dest.to_file(
+#     os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_cmt_dest.shp")
+# )

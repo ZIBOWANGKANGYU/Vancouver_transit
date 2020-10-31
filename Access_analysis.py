@@ -204,7 +204,7 @@ plt.savefig(
     )
 )
 
-### Number services in region (per resident)
+### Number of services in region (per resident)
 stops_cnt_services = stop_times.groupby("stop_id").size().rename("stop_cnt_services")
 stops_gdf_cnt_services = stops_gdf.join(stops_cnt_services, on="stop_id", how="left")
 GVA_DA_NBA_stops_cnt_services = geopandas.sjoin(
@@ -222,19 +222,29 @@ GVA_DA_Access["NBA_services_PC"] = (
 )
 
 ### Mapping the top 10%
-GVA_DA_stops_PC = pd.concat([GVA_base, GVA_DA_Access[["NBA_stops_PC"]]], axis=1)
-GVA_DA_stops_PC = GVA_DA_stops_PC[
-    GVA_DA_stops_PC.NBA_stops_PC >= GVA_DA_stops_PC.NBA_stops_PC.quantile(0.9)
+GVA_DA_services_PC = pd.concat([GVA_base, GVA_DA_Access[["NBA_services_PC"]]], axis=1)
+GVA_DA_services_PC = GVA_DA_services_PC[
+    GVA_DA_services_PC.NBA_services_PC
+    >= GVA_DA_services_PC.NBA_services_PC.quantile(0.9)
 ]
 
-GVA_DA_stops_PC_ax = GVA_DA_stops_PC.plot(
+GVA_DA_services_PC_ax = GVA_DA_services_PC.plot(
     figsize=(20, 20), alpha=0.5, legend=True, color="r"
 )
-ctx.add_basemap(GVA_DA_stops_PC_ax, zoom=12)
-plt.title("Top 10% Dissemination Areas by Access to Transit Stops per Capita")
+ctx.add_basemap(GVA_DA_services_PC_ax, zoom=12)
+plt.title("Top 10% Dissemination Areas by Access to Transit Services per Capita")
 
 plt.savefig(
     os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "NBA_stops_PC_10pc.png"
+        os.getcwd(),
+        "Vancouver_transit",
+        "Maps",
+        data_version,
+        "NBA_services_PC_10pc.png",
     )
+)
+
+# Save access data
+GVA_DA_Access.to_file(
+    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Access.shp")
 )
