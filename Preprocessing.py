@@ -52,7 +52,7 @@ GVA_DA_cmt_usage_df = GVA_DA_cmt_usage.loc[
         "prop_private_passenger",
         "prop_public",
         "prop_walk",
-        "bicycle",
+        "prop_bicycle",
         "prop_within_CSD",
         "prop_within_CD",
         "prop_within_province",
@@ -67,8 +67,9 @@ GVA_DA_cmt_usage_df = GVA_DA_cmt_usage.loc[
 ]
 
 GVA_DA_Preprocess = pd.concat([GVA_DA_Access, GVA_DA_cmt_usage_df], axis=1)
+GVA_DA_Preprocess_header = list(header)[:-1] + list(GVA_DA_Preprocess.columns[-20:])
 
-# Cleaning roles
+# Cleaning rows
 
 ## By basic demographic features
 
@@ -151,7 +152,7 @@ plt.savefig(
 )
 
 # Preliminary analyses
-## Weak nonetheless positive relationship between accesibility and usage
+## Weak yet positive relationship between accesibility and usage
 GVA_DA_Preprocess.loc[:, ["NBA_stops_PC", "prop_public"]].corr()
 
 GVA_DA_Preprocess.loc[:, ["NBA_services_PC", "prop_public"]].corr()
@@ -161,18 +162,18 @@ stop_PC_prop_public = (
     alt.Chart(
         GVA_DA_Preprocess, title="Access to Stops in Neighborhood Area and Transit Use"
     )
-    .mark_rect()
+    .mark_rect(clip=True)
     .encode(
         x=alt.X(
             "NBA_stops_PC",
             title="Number of stops per capita in neighborhood area",
-            bin=alt.Bin(maxbins=100),
-            scale=alt.Scale(domain=[0, 0.3]),
+            bin=alt.Bin(maxbins=300),
+            scale=alt.Scale(domain=[0, 0.15]),
         ),
         y=alt.Y(
             "prop_public", title="Proportion of transit user", bin=alt.Bin(maxbins=50)
         ),
-        color=alt.Color("count()"),
+        color=alt.Color("count()", title="Count"),
     )
 )
 
@@ -180,9 +181,9 @@ stop_PC_prop_public.save(
     os.path.join(
         os.getcwd(),
         "Vancouver_transit",
-        "Maps",
+        "Figures",
         data_version,
-        "stop_PC_prop_public.html",
+        "stop_PC_prop_public.png",
     )
 )
 
@@ -191,18 +192,18 @@ service_PC_prop_public = (
         GVA_DA_Preprocess,
         title="Access to Services in Neighborhood Area and Transit Use",
     )
-    .mark_rect()
+    .mark_rect(clip=True)
     .encode(
         x=alt.X(
             "NBA_services_PC",
             title="Number of services per capita in neighborhood area",
             bin=alt.Bin(maxbins=1000),
-            scale=alt.Scale(domain=[0, 100]),
+            scale=alt.Scale(domain=[0, 75]),
         ),
         y=alt.Y(
             "prop_public", title="Proportion of transit user", bin=alt.Bin(maxbins=50)
         ),
-        color=alt.Color("count()"),
+        color=alt.Color("count()", title="Count"),
     )
 )
 
@@ -210,11 +211,155 @@ service_PC_prop_public.save(
     os.path.join(
         os.getcwd(),
         "Vancouver_transit",
-        "Maps",
+        "Figures",
         data_version,
-        "service_PC_prop_public.html",
+        "service_PC_prop_public.png",
     )
 )
+
+# Create proportion variables
+# There are two types of numeric columns in the dataframe:
+# 1) Proportions or averages
+# 2) Counts
+# We will put (1)-type variables directly into our models. For (2)-type variables, there are two sub-types:
+# 2.1) Counts of subjects belonging to the widest category in a DA, for example, total number of people who are immigrants.
+# We will put (2.1)-type variables directly into our models.
+# 2.2) Counts of subjects belonging to a sub-category of a (2.1)-type variable in a DA. There are two sub-types:
+# 2.2.1) Counts of subjects belonging to a immediate sub-category of a (2.1)-type variable, for example, total number of immigrants who are born in Asia.
+# We will use (2.2.1)-type variables in two ways.
+# Firstly, we will put type (2.2.1) variables directly into our models.
+# Secondly, we will calculate the proportion that each (2.2.1)-type variable accounts for in the (2.1)-type variable that it belongs to.
+# 2.2.2) Counts of subjects beloinging to a further-off sub-category of a variable in (2.1), for example, total number of immigrants who are born in India, Asia.
+# We will use (2.2.2)-type bariables in three ways.
+# Firstly, we will put type (2.2.2) variables directly into our models.
+# Secondly, we will calculate the proportion that each (2.2.2)-type variable accounts for in the (2.1)-type variable that it ultimately (but not immediately) belongs to.
+# Thirdly, we will calculate the proportion that each (2.2.2)-type variable accounts for in the (2.2.1)- or (2.2.2)-type variable that it immediately belongs to.
+
+GVA_DA_Preprocess_variable_types = pd.DataFrame(
+    {"variable_name": list(GVA_DA_Preprocess_header)}
+)
+
+GVA_DA_Preprocess_variable_types["variable_type"] = None
+
+GVA_DA_Preprocess_variable_types.loc[
+    GVA_DA_Preprocess_variable_types["variable_name"] == "DAUID", "variable_type"
+] = "IND"
+
+GVA_DA_Preprocess_variable_types.loc[1:21, "variable_type"] = "CAT"
+
+GVA_DA_Preprocess_variable_types.loc[
+    1:21, "variable_type"
+] = GVA_DA_Preprocess_variable_types.loc[1:21, "variable_type"].where(
+    GVA_DA_Preprocess_variable_types.loc[1:21, "variable_name"].str.endswith("ID"),
+    "DEL",
+)
+
+## Find type(1) and type (2.1) variables
+GVA_DA_Preprocess_variable_types.loc[
+    28:549, "variable_type"
+] = GVA_DA_Preprocess_variable_types.loc[28:549, "variable_type"].where(
+    GVA_DA_Preprocess_variable_types.loc[28:549, "variable_name"].str.count("/") > 1,
+    "1_2_1",
+)
+
+## Find type(2.2.1) variables
+GVA_DA_Preprocess_variable_types.loc[
+    28:549, "variable_type"
+] = GVA_DA_Preprocess_variable_types.loc[28:549, "variable_type"].where(
+    (
+        (
+            GVA_DA_Preprocess_variable_types.loc[28:549, "variable_name"].str.count("/")
+            > 2
+        )
+        | (
+            GVA_DA_Preprocess_variable_types.loc[28:549, "variable_name"].str.count("/")
+            <= 1
+        )
+    ),
+    "2_2_1",
+)
+
+### Find parent variables of type(2.2.1) variables
+GVA_DA_Preprocess_variable_types["ultimate_parent"] = None
+GVA_DA_Preprocess_variable_types["immediate_parent"] = None
+
+ultimate_parents = list(
+    map(
+        lambda s: s[: s.find("/", s.find("/") + 1) - 1],
+        list(
+            GVA_DA_Preprocess_variable_types.loc[
+                GVA_DA_Preprocess_variable_types["variable_type"] == "2_2_1",
+                "variable_name",
+            ]
+        ),
+    )
+)
+
+GVA_DA_Preprocess_variable_types.loc[
+    GVA_DA_Preprocess_variable_types["variable_type"] == "2_2_1",
+    "ultimate_parent",
+] = [
+    ultimate_parent
+    if (ultimate_parent in list(GVA_DA_Preprocess_variable_types["variable_name"]))
+    else None
+    for ultimate_parent in ultimate_parents
+]
+
+## Find type(2.2.2) variables
+GVA_DA_Preprocess_variable_types.loc[
+    28:549, "variable_type"
+] = GVA_DA_Preprocess_variable_types.loc[28:549, "variable_type"].where(
+    GVA_DA_Preprocess_variable_types.loc[28:549, "variable_name"].str.count("/") <= 2,
+    "2_2_2",
+)
+
+### Find parent variables of type(2.2.2) variables
+
+#### Find ultimate parents
+ultimate_parents = list(
+    map(
+        lambda s: s[: s.find("/", s.find("/") + 1) - 1],
+        list(
+            GVA_DA_Preprocess_variable_types.loc[
+                GVA_DA_Preprocess_variable_types["variable_type"] == "2_2_2",
+                "variable_name",
+            ]
+        ),
+    )
+)
+
+GVA_DA_Preprocess_variable_types.loc[
+    GVA_DA_Preprocess_variable_types["variable_type"] == "2_2_2",
+    "ultimate_parent",
+] = [
+    ultimate_parent
+    if (ultimate_parent in list(GVA_DA_Preprocess_variable_types["variable_name"]))
+    else None
+    for ultimate_parent in ultimate_parents
+]
+
+#### Find immediate parents
+immediate_parents = list(
+    map(
+        lambda s: s[: s.rfind("/") - 1],
+        list(
+            GVA_DA_Preprocess_variable_types.loc[
+                GVA_DA_Preprocess_variable_types["variable_type"] == "2_2_2",
+                "variable_name",
+            ]
+        ),
+    )
+)
+
+GVA_DA_Preprocess_variable_types.loc[
+    GVA_DA_Preprocess_variable_types["variable_type"] == "2_2_2",
+    "immediate_parent",
+] = [
+    immediate_parent
+    if (immediate_parent in list(GVA_DA_Preprocess_variable_types["variable_name"]))
+    else None
+    for immediate_parent in immediate_parents
+]
 
 GVA_DA_Preprocess.to_file(
     os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Preprocess.json"),

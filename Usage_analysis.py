@@ -164,7 +164,7 @@ GVA_DA_cmt_mode["prop_private_passenger"] = (
 )
 GVA_DA_cmt_mode["prop_public"] = GVA_DA_cmt_mode["vn443"] / GVA_DA_cmt_mode["vn440"]
 GVA_DA_cmt_mode["prop_walk"] = GVA_DA_cmt_mode["vn444"] / GVA_DA_cmt_mode["vn440"]
-GVA_DA_cmt_mode["bicycle"] = GVA_DA_cmt_mode["vn445"] / GVA_DA_cmt_mode["vn440"]
+GVA_DA_cmt_mode["prop_bicycle"] = GVA_DA_cmt_mode["vn445"] / GVA_DA_cmt_mode["vn440"]
 
 #### Histogram of distribution of proportion of commute mode use across DAs
 import matplotlib.pyplot as plt
@@ -177,7 +177,7 @@ GVA_DA_cmt_mode_hist = GVA_DA_cmt_mode.melt(
         "prop_private_passenger",
         "prop_public",
         "prop_walk",
-        "bicycle",
+        "prop_bicycle",
     ],
 )
 GVA_DA_cmt_mode_hist = GVA_DA_cmt_mode_hist.rename(
