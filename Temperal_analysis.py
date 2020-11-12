@@ -94,7 +94,7 @@ plt.hist(
 )
 plt.ylabel("Count")
 plt.xlabel("Arrival Time")
-plt.title("Number of Services by Arrival Time")
+plt.title("Number of Services by Arrival Time", fontsize=20)
 plt.savefig(
     os.path.join(
         os.getcwd(),
@@ -138,17 +138,6 @@ plt.hist(
 stops_gdf = stops_gdf.merge(
     stop_times_avrg_arr_t, left_on="stop_id", right_on="stop_id"
 )
-stops_avrg_arr_t = stops_gdf.loc[
-    (stops_gdf["avrg_arrival_time"] >= 10) & (stops_gdf["avrg_arrival_time"] <= 18)
-].plot(
-    figsize=(20, 20), alpha=0.5, column="avrg_arrival_time", cmap="seismic", legend=True
-)
-ctx.add_basemap(stops_avrg_arr_t, zoom=12)
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "stops_avrg_arr_t.png"
-    )
-)  # Stops in Vancouver, Burnabay and west Richmond have later average arrival times than stops elsewhere
 
 ## Identify stops by whether busy or not
 stops_cnt_trips = (

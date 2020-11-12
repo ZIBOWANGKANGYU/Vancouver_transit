@@ -12,6 +12,11 @@ cwd = os.path.dirname(os.getcwd())
 os.chdir(cwd)
 data_dir = os.path.join(os.getcwd(), "TL_data", data_version)
 
+GVA_map_xlim_lower = -13746072.435927173
+GVA_map_xlim_higher = -13630000
+GVA_map_ylim_lower = 6270302.809935683
+GVA_map_ylim_higher = 6345000
+
 # Read files
 import pandas as pd
 
@@ -81,13 +86,17 @@ stops_gdf = stops_gdf.to_crs(epsg=3857)  # Convert to web mercator
 import contextily as ctx
 
 stops_ax = stops_gdf.plot(figsize=(20, 20), alpha=0.5, edgecolor="k")
+stops_ax.set_xlim(GVA_map_xlim_lower, GVA_map_xlim_higher)
+stops_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
 ctx.add_basemap(stops_ax, zoom=12)
+plt.title("Transit Stops in Great Vancouver Area", fontsize=30)
+plt.axis("off")
 plt.savefig(
     os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version, "stops.png")
 )
 
 ## Trips
-###Number of stops per trip
+### Number of stops per trip
 trips_cnt_stops = (
     stop_times.groupby("trip_id")
     .agg(num_stops=pd.NamedAgg(column="stop_id", aggfunc=lambda x: len(x.unique())))
@@ -112,7 +121,7 @@ plt.hist(trips_cnt_stops["num_stops"], density=False, bins=30)
 plt.axvline(x=trips_cnt_stops["num_stops"].median(), color="red")
 plt.ylabel("Count")
 plt.xlabel("Number of stops")
-plt.title("Number of trips by stop counting")
+plt.title("Number of trips by stop counting", fontsize=20)
 plt.savefig(
     os.path.join(
         os.getcwd(),
@@ -123,7 +132,7 @@ plt.savefig(
     )
 )
 
-###Number of trips per stop
+### Number of trips per stop
 stops_cnt_trips = (
     stop_times.groupby("stop_id")
     .agg(num_trips=pd.NamedAgg(column="trip_id", aggfunc=lambda x: len(x.unique())))
@@ -141,7 +150,7 @@ plt.hist(stops_cnt_trips["num_trips"], density=False, bins=30)
 plt.axvline(x=stops_cnt_trips["num_trips"].median(), color="red")
 plt.ylabel("Count")
 plt.xlabel("Number of trips")
-plt.title("Number of stops by trip counting")
+plt.title("Number of stops by trip counting", fontsize=20)
 plt.savefig(
     os.path.join(
         os.getcwd(),
@@ -152,16 +161,22 @@ plt.savefig(
     )
 )
 
-###Busiest stops
+### Busiest stops
 stops_gdf = stops_gdf.to_crs(epsg=3857)  # Convert to web mercator
 
 stops_gdf_bz = stops_gdf.loc[
     stops_gdf.stop_id.isin(stops_cnt_trips[-10:].index.tolist())
 ]
 
-stops_ax_bz = stops_gdf_bz.plot(figsize=(10, 10), markersize=30, alpha=0.5, color="red")
+stops_ax_bz = stops_gdf_bz.plot(
+    figsize=(10, 10),
+    markersize=30,
+    alpha=0.5,
+    color="red",
+)
 ctx.add_basemap(stops_ax_bz, zoom=12)
-plt.title("10 Buziest stops")
+plt.title("10 Busiest stops", fontsize=30)
+plt.axis("off")
 plt.savefig(
     os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version, "stops_bz.png")
 )
@@ -170,6 +185,7 @@ plt.savefig(
 stops_gdf_cnt_trips = stops_gdf.merge(
     stops_cnt_trips, left_on="stop_id", right_on="stop_id"
 )
+
 stops_ax_cnt_trips = stops_gdf_cnt_trips.plot(
     figsize=(20, 20),
     markersize=20,
@@ -178,9 +194,26 @@ stops_ax_cnt_trips = stops_gdf_cnt_trips.plot(
     cmap="OrRd",
     norm=matplotlib.colors.LogNorm(),
 )
+stops_ax_cnt_trips.set_xlim(GVA_map_xlim_lower, GVA_map_xlim_higher)
+stops_ax_cnt_trips.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
+plt.title("Stops by number of trips", fontsize=30)
+plt.axis("off")
 ctx.add_basemap(stops_ax_cnt_trips, zoom=12)
-plt.title("Stops by number of trips")
-plt.savefig(
+fig = stops_ax_cnt_trips.get_figure()
+cbax = fig.add_axes([0.93, 0.3, 0.03, 0.39])
+cbax.set_title("# of trips")
+
+sm = plt.cm.ScalarMappable(
+    cmap="OrRd",
+    norm=plt.Normalize(
+        vmin=min(stops_gdf_cnt_trips.num_trips), vmax=max(stops_gdf_cnt_trips.num_trips)
+    ),
+)
+sm._A = []
+fig.colorbar(sm, cax=cbax, format="%1.0f")
+fig.show()
+
+fig.savefig(
     os.path.join(
         os.getcwd(), "Vancouver_transit", "Maps", data_version, "stops_cnt_trips.png"
     )
@@ -206,13 +239,22 @@ lines_gdf = geopandas.GeoDataFrame(
     ],
 )
 
-lines_gdf.plot()
 lines_gdf.crs = {"init": "epsg:4326"}
-
 lines_gdf = lines_gdf.to_crs(epsg=3857)  # Convert to web mercator
 
-lines_ax = lines_gdf.plot(figsize=(20, 20), alpha=0.5, edgecolor="k")
+lines_gdf.plot()
+lines_ax = lines_gdf.plot(
+    figsize=(20, 20),
+    alpha=0.5,
+    edgecolor="k",
+)
+
+lines_ax.set_xlim(GVA_map_xlim_lower, GVA_map_xlim_higher)
+lines_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
+
 ctx.add_basemap(lines_ax, zoom=12)
+plt.title("Transit Lines", fontsize=30)
+plt.axis("off")
 plt.savefig(
     os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version, "lines.png")
 )
@@ -224,11 +266,11 @@ trips_line = trips_line.merge(
     right_on="route_id",
 )
 
-plt.hist(trips_line["max_dist"], density=False, bins=30)
+plt.hist(trips_line["max_dist"], density=False, bins=50)
 plt.axvline(x=trips_line["max_dist"].median(), color="red")
 plt.ylabel("Count")
 plt.xlabel("Trip distance (km)")
-plt.title("Number of trips by distance")
+plt.title("Number of trips by distance", fontsize=20)
 plt.savefig(
     os.path.join(
         os.getcwd(), "Vancouver_transit", "Figures", data_version, "dist_hist.png"
@@ -246,8 +288,10 @@ print(
 )
 lines_max_dist = lines_gdf[lines_gdf.index == lines_gdf["max_dist"].idxmax()]
 lines_ax_max = lines_max_dist.plot(
-    figsize=(20, 20), alpha=0.5, color="red", edgecolor="k"
+    figsize=(25, 10), alpha=0.5, color="red", edgecolor="k", linewidth=5
 )
+plt.title("Longest Route in Great Vancouver Transit", fontsize=30)
+plt.axis("off")
 ctx.add_basemap(lines_ax_max, zoom=12)
 plt.savefig(
     os.path.join(
@@ -283,7 +327,7 @@ shapes_gdf.to_file(
     driver="GeoJSON",
 )
 
-# #The stop_times table is very large in size. Remove some columns and break up the file to save them in batches.
+## The stop_times table is very large in size. Remove some columns and break up the file to save them in batches.
 
 n_batch = len(stop_times) // 200000
 

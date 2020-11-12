@@ -145,7 +145,7 @@ CSD_within_CSD_ax = GVA_CSD_cmt_dest.plot(
     figsize=(20, 20), alpha=0.5, column="prop_within_CSD", cmap="OrRd", legend=True
 )
 ctx.add_basemap(CSD_within_CSD_ax, zoom=12)
-plt.title("Proportion of population transitting within CSD")
+plt.title("Proportion of population transitting within CSD", fontsize=30)
 
 plt.savefig(
     os.path.join(
@@ -185,7 +185,10 @@ GVA_DA_cmt_mode_hist = GVA_DA_cmt_mode_hist.rename(
 )
 
 sns.displot(GVA_DA_cmt_mode_hist, x="prop", hue="mode", kind="kde", fill=True)
-plt.title("Proportion of commuters by mode of transportation in Greater Vancouver Area")
+plt.title(
+    "Proportion of commuters by mode of transportation in Greater Vancouver Area",
+    fontsize=30,
+)
 plt.savefig(
     os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_mode.png")
 )
@@ -216,7 +219,7 @@ DA_public_cmt_ax = GVA_DA_cmt_mode.plot(
     scheme="quantiles",
 )
 ctx.add_basemap(DA_public_cmt_ax, zoom=12)
-plt.title("Proportion of population using public transportation")
+plt.title("Proportion of population using public transportation", fontsize=30)
 
 plt.savefig(
     os.path.join(
@@ -331,7 +334,7 @@ DA_cmt_duration_ax = GVA_DA_cmt_duration.plot(
     legend=True,
 )
 ctx.add_basemap(DA_cmt_duration_ax, zoom=12)
-plt.title("Average Commuting Time")
+plt.title("Average Commuting Time", fontsize=30)
 
 plt.savefig(
     os.path.join(
@@ -437,7 +440,7 @@ print(
 # Export files
 GVA_DA_cmt_usage = pd.concat(
     [
-        GVA_DA_cmt_dest,
+        GVA_DA_cmt_mode,
         GVA_DA_cmt_dest.loc[
             :,
             [
@@ -462,6 +465,7 @@ GVA_DA_cmt_usage = pd.concat(
     axis=1,
 )
 
-# GVA_DA_cmt_dest.to_file(
-#     os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_cmt_dest.shp")
-# )
+GVA_DA_cmt_usage.to_file(
+    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_cmt_usage.json"),
+    driver="GeoJSON",
+)
