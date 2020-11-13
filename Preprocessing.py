@@ -17,6 +17,7 @@ import geopandas
 import matplotlib.pyplot as plt
 import altair as alt
 import math
+from itertools import compress
 
 cwd = os.path.dirname(os.getcwd())
 os.chdir(cwd)
@@ -254,11 +255,22 @@ GVA_DA_Preprocess_variable_types.loc[
     "DEL",
 )
 
+GVA_DA_Preprocess_variable_types.loc[22:27, "variable_type"] = "DEL"
+
+GVA_DA_Preprocess_variable_types.loc[550:569, "variable_type"] = "1_2_1"
+
+GVA_DA_Preprocess_variable_types.loc[
+    GVA_DA_Preprocess_variable_types["variable_name"] == "geometry", "variable_type"
+] = "DEL"
+
 ## Find type(1) and type (2.1) variables
 GVA_DA_Preprocess_variable_types.loc[
     28:549, "variable_type"
 ] = GVA_DA_Preprocess_variable_types.loc[28:549, "variable_type"].where(
-    GVA_DA_Preprocess_variable_types.loc[28:549, "variable_name"].str.count("/") > 1,
+    GVA_DA_Preprocess_variable_types.loc[
+        GVA_DA_Preprocess_variable_types["variable_name"] == "DAUID", "variable_name"
+    ].str.count("/")
+    > 1,
     "1_2_1",
 )
 
@@ -360,6 +372,58 @@ GVA_DA_Preprocess_variable_types.loc[
     else None
     for immediate_parent in immediate_parents
 ]
+
+# Create new dataframe containing ultimate-parents proportion variables
+ultimate_proportions = pd.DataFrame()
+
+for i, variable_name in enumerate(GVA_DA_Preprocess_variable_types.variable_name):
+    if not GVA_DA_Preprocess_variable_types.ultimate_parent[i]:
+        continue
+    parent_variable_name = GVA_DA_Preprocess.columns[
+        list(GVA_DA_Preprocess_variable_types.variable_name).index(
+            GVA_DA_Preprocess_variable_types.ultimate_parent[i]
+        )
+    ]
+    new_variable_name = (
+        GVA_DA_Preprocess.columns[i] + "_ultimate_" + parent_variable_name
+    )
+
+    ultimate_proportions[new_variable_name] = (
+        GVA_DA_Preprocess[GVA_DA_Preprocess.columns[i]]
+        / GVA_DA_Preprocess[parent_variable_name]
+    )
+
+# Create new dataframe containing immediate-parents proportion variables
+immediate_proportions = pd.DataFrame()
+
+for i, variable_name in enumerate(GVA_DA_Preprocess_variable_types.variable_name):
+    if not GVA_DA_Preprocess_variable_types.immediate_parent[i]:
+        continue
+    parent_variable_name = GVA_DA_Preprocess.columns[
+        list(GVA_DA_Preprocess_variable_types.variable_name).index(
+            GVA_DA_Preprocess_variable_types.immediate_parent[i]
+        )
+    ]
+    new_variable_name = (
+        GVA_DA_Preprocess.columns[i] + "_immediate_" + parent_variable_name
+    )
+
+    immediate_proportions[new_variable_name] = (
+        GVA_DA_Preprocess[GVA_DA_Preprocess.columns[i]]
+        / GVA_DA_Preprocess[parent_variable_name]
+    )
+
+# Create training and testing sets
+GVA_DA_Modeling_header = (
+    list(
+        compress(
+            GVA_DA_Preprocess_header,
+            list(GVA_DA_Preprocess_variable_types.variable_type != "DEL"),
+        )
+    )
+    + list(ultimate_proportions.columns)
+    + list(immediate_proportions.columns)
+)
 
 GVA_DA_Preprocess.to_file(
     os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Preprocess.json"),
