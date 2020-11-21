@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import altair as alt
 import math
 from itertools import compress
+from sklearn.model_selection import train_test_split
 
 cwd = os.path.dirname(os.getcwd())
 os.chdir(cwd)
@@ -259,10 +260,6 @@ GVA_DA_Preprocess_variable_types.loc[22:27, "variable_type"] = "DEL"
 
 GVA_DA_Preprocess_variable_types.loc[550:569, "variable_type"] = "1_2_1"
 
-GVA_DA_Preprocess_variable_types.loc[
-    GVA_DA_Preprocess_variable_types["variable_name"] == "geometry", "variable_type"
-] = "DEL"
-
 ## Find type(1) and type (2.1) variables
 GVA_DA_Preprocess_variable_types.loc[
     28:549, "variable_type"
@@ -290,6 +287,16 @@ GVA_DA_Preprocess_variable_types.loc[
     ),
     "2_2_1",
 )
+
+## Find variables that should not be included as predictors in modeling
+GVA_DA_Preprocess_variable_types.loc[462:481, "variable_type"] = "N_INC"
+GVA_DA_Preprocess_variable_types.loc[505:524, "variable_type"] = "N_INC"
+GVA_DA_Preprocess_variable_types.loc[530:549, "variable_type"] = "N_INC"
+GVA_DA_Preprocess_variable_types.loc[550, "variable_type"] = "N_INC"
+GVA_DA_Preprocess_variable_types.loc[552, "variable_type"] = "N_INC"
+GVA_DA_Preprocess_variable_types.loc[555:556, "variable_type"] = "N_INC"
+GVA_DA_Preprocess_variable_types.loc[558:569, "variable_type"] = "N_INC"
+
 
 ### Find parent variables of type(2.2.1) variables
 GVA_DA_Preprocess_variable_types["ultimate_parent"] = None
@@ -413,19 +420,67 @@ for i, variable_name in enumerate(GVA_DA_Preprocess_variable_types.variable_name
         / GVA_DA_Preprocess[parent_variable_name]
     )
 
-# Create training and testing sets
+# Create and save dataframes ready for modeling
 GVA_DA_Modeling_header = (
     list(
         compress(
             GVA_DA_Preprocess_header,
-            list(GVA_DA_Preprocess_variable_types.variable_type != "DEL"),
+            list(
+                (GVA_DA_Preprocess_variable_types.variable_type != "DEL")
+                & (GVA_DA_Preprocess_variable_types.variable_type != "N_INC")
+            ),
         )
     )
     + list(ultimate_proportions.columns)
     + list(immediate_proportions.columns)
 )
 
-GVA_DA_Preprocess.to_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Preprocess.json"),
+GVA_DA_Modeling = pd.concat(
+    [
+        GVA_DA_Preprocess.loc[
+            :,
+            list(
+                (GVA_DA_Preprocess_variable_types.variable_type != "DEL")
+                & (GVA_DA_Preprocess_variable_types.variable_type != "N_INC")
+            ),
+        ],
+        ultimate_proportions,
+        immediate_proportions,
+    ],
+    axis=1,
+)
+
+GVA_DA_Modeling.dtypes
+
+## Create training and testing sets
+
+GVA_DA_Modeling_train, GVA_DA_Modeling_test = train_test_split(
+    GVA_DA_Modeling, test_size=0.2, random_state=2020
+)
+
+## Save dataframes
+
+GVA_DA_Modeling.to_file(
+    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling.json"),
     driver="GeoJSON",
 )
+
+GVA_DA_Modeling_train.to_file(
+    os.path.join(
+        os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling_train.json"
+    ),
+    driver="GeoJSON",
+)
+
+GVA_DA_Modeling_test.to_file(
+    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling_test.json"),
+    driver="GeoJSON",
+)
+
+with open(
+    os.path.join(
+        os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling_header.json"
+    ),
+    "w+",
+) as GVA_DA_Modeling_header_outfile:
+    json.dump(GVA_DA_Modeling_header, GVA_DA_Modeling_header_outfile)
