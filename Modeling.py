@@ -9,6 +9,7 @@ data_version = "20200606"
 
 import os
 import geopandas
+from joblib import dump, load
 import json
 import numpy as np
 import pandas as pd
@@ -19,7 +20,12 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import Lasso
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import cross_val_score, cross_validate, train_test_split
+from sklearn.model_selection import (
+    cross_val_score,
+    cross_validate,
+    train_test_split,
+    RandomizedSearchCV,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
     OneHotEncoder,
@@ -136,8 +142,119 @@ scores_dummy = cross_validate(
     X_train,
     y_train,
     return_train_score=True,
-    scoring="neg_root_mean_squared_error",
 )
 pd.DataFrame(scores_dummy).T
 
 # LASSO model
+
+## default model
+
+scores_LASSO_default = cross_validate(
+    pipe_LASSO,
+    X_train,
+    y_train,
+    return_train_score=True,
+)
+pd.DataFrame(scores_LASSO_default).T
+
+## Hyperparameter optimization
+
+param_grid = {
+    "LASSO_reg__alpha": 10.0 ** np.arange(-5, 5),
+}
+
+random_search_LASSO = RandomizedSearchCV(
+    pipe_LASSO, param_distributions=param_grid, n_jobs=-2, n_iter=10
+)
+
+random_search_LASSO.fit(X_train, y_train)
+
+
+pd.DataFrame(random_search_LASSO.cv_results_)[
+    [
+        "mean_test_score",
+        "param_LASSO_reg__alpha",
+        "mean_fit_time",
+        "rank_test_score",
+    ]
+].set_index("rank_test_score").sort_index()
+
+# Random Forest model
+
+## Default model
+
+scores_rf_default = cross_validate(
+    pipe_rf,
+    X_train,
+    y_train,
+    return_train_score=True,
+)
+pd.DataFrame(scores_rf_default).T
+
+## Hyperparameter optimization
+
+param_grid = {
+    "rf_reg__max_depth": [10, 40, 70, 100, None],
+    "rf_reg__max_features": ["auto", "sqrt"],
+    "rf_reg__min_samples_leaf": [1, 2, 4],
+    "rf_reg__min_samples_split": [2, 5, 10],
+    "rf_reg__n_estimators": [200, 600, 1000, 2000],
+}
+
+random_search_rf = RandomizedSearchCV(
+    pipe_rf, param_distributions=param_grid, n_jobs=-2, n_iter=10
+)
+
+random_search_rf.fit(X_train, y_train)
+
+pd.DataFrame(random_search_rf.cv_results_)[
+    [
+        "mean_test_score",
+        "param_rf_reg__max_depth",
+        "param_rf_reg__max_features",
+        "param_rf_reg__min_samples_leaf",
+        "param_rf_reg__min_samples_split",
+        "param_rf_reg__n_estimators",
+        "mean_fit_time",
+        "rank_test_score",
+    ]
+].set_index("rank_test_score").sort_index()
+
+# Save models and data
+
+dump(
+    random_search_LASSO,
+    os.path.join(
+        os.getcwd(),
+        "Models",
+        data_version,
+        "random_search_LASSO.joblib",
+    ),
+)
+
+dump(
+    random_search_rf,
+    os.path.join(
+        os.getcwd(),
+        "Models",
+        data_version,
+        "random_search_LASSO.joblib",
+    ),
+)
+
+X_train.to_file(
+    os.path.join(os.getcwd(), "Data_Tables", data_version, "X_train.json"),
+    driver="GeoJSON",
+)
+
+with open(
+    os.path.join(os.getcwd(), "Data_Tables", data_version, "X_header.json"),
+    "w+",
+) as X_header_outfile:
+    json.dump(X_header, X_header_outfile)
+
+with open(
+    os.path.join(os.getcwd(), "Data_Tables", data_version, "y_train.json"),
+    "w+",
+) as y_train_outfile:
+    json.dump(y_train.to_json(), y_train_outfile)

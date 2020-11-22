@@ -79,13 +79,17 @@ GVA_DA_Preprocess_header = list(header)[:-1] + list(GVA_DA_Preprocess.columns[-2
 print(
     f"There are {sum(GVA_DA_Preprocess['vn13'] == 0)} DA(s) with zero population in 2016."
 )
-GVA_DA_Preprocess = GVA_DA_Preprocess.loc[GVA_DA_Preprocess["vn13"] != 0, :]
+GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
+    (GVA_DA_Preprocess["vn13"] != 0) & (GVA_DA_Preprocess["vn13"].isnull() == False), :
+]
 
 ### Land size
 print(
     f"There are {sum(GVA_DA_Preprocess['vn19'] == 0)} DA(s) with zero land size in 2016."
 )
-GVA_DA_Preprocess = GVA_DA_Preprocess.loc[GVA_DA_Preprocess["vn19"] != 0, :]
+GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
+    (GVA_DA_Preprocess["vn19"] != 0) & (GVA_DA_Preprocess["vn19"].isnull() == False), :
+]
 
 #### Remove very large DAs (above 2 standard deviations above mean)
 land_area_threshold = (
@@ -111,16 +115,27 @@ GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
     & (GVA_DA_Preprocess["vn18"] > pop_dens_threshold_lower),
     :,
 ]
+
+### Proportion of transit use
+GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
+    GVA_DA_Preprocess["prop_public"].isnull() == False,
+    :,
+]
+
 ## By outcome variable
 
 ### Service count
 GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
-    GVA_DA_Preprocess["DA_NBA_services_count"] != 0, :
+    (GVA_DA_Preprocess["DA_NBA_services_count"] != 0)
+    & (GVA_DA_Preprocess["DA_NBA_services_count"].isnull() == False),
+    :,
 ]
 
 ### Stop count
 GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
-    GVA_DA_Preprocess["DA_NBA_stops_count"] != 0, :
+    (GVA_DA_Preprocess["DA_NBA_stops_count"] != 0)
+    & (GVA_DA_Preprocess["DA_NBA_stops_count"].isnull() == False),
+    :,
 ]
 
 ## Map removed DAs
