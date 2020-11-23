@@ -18,6 +18,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
+from sklearn.inspection import permutation_importance
 from sklearn.linear_model import Lasso
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import (
@@ -82,8 +83,20 @@ categorical_features = [
 ]
 
 numeric_features = X_train.columns[10:474]
+### Remove numeric features that are made of NAs
+numeric_features = [
+    feature
+    for feature in numeric_features
+    if X_train.isnull().all(axis=0)[feature] == False
+]
 
 proportion_features = X_train.columns[475:-1]
+### Remove numeric features that are made of NAs
+proportion_features = [
+    feature
+    for feature in proportion_features
+    if X_train.isnull().all(axis=0)[feature] == False
+]
 
 geometry_feature = ["geometry"]
 
@@ -220,6 +233,98 @@ pd.DataFrame(random_search_rf.cv_results_)[
     ]
 ].set_index("rank_test_score").sort_index()
 
+# Preliminary analyses on models
+
+# Get input variable names
+
+### Define function get_column_names_from_ColumnTransformer
+
+
+def get_column_names_from_ColumnTransformer(column_transformer):
+
+    col_name = []
+
+    for transformer_in_columns in column_transformer.transformers_[
+        :-1
+    ]:  # the last transformer is ColumnTransformer's 'remainder'
+        print("\n\ntransformer: ", transformer_in_columns[0])
+
+        raw_col_name = list(transformer_in_columns[2])
+
+        if isinstance(transformer_in_columns[1], Pipeline):
+            # if pipeline, get the last transformer
+            transformer = transformer_in_columns[1].steps[-1][1]
+        else:
+            transformer = transformer_in_columns[1]
+
+        try:
+            if isinstance(transformer, OneHotEncoder):
+                names = list(transformer.get_feature_names(raw_col_name))
+
+            elif isinstance(transformer, SimpleImputer) and transformer.add_indicator:
+                missing_indicator_indices = transformer.indicator_.features_
+                missing_indicators = [
+                    raw_col_name[idx] + "_missing_flag"
+                    for idx in missing_indicator_indices
+                ]
+
+                names = raw_col_name + missing_indicators
+
+            else:
+                names = list(transformer.get_feature_names())
+
+        except AttributeError as error:
+            names = raw_col_name
+
+        print(names)
+
+        col_name.extend(names)
+
+    return col_name
+
+
+preprocessor.fit(X_train)
+feature_names = get_column_names_from_ColumnTransformer(preprocessor)
+
+## LASSO model
+
+LASSO_coeffs = random_search_LASSO.best_estimator_["LASSO_reg"].coef_
+
+LASSO_feature_coeffs = pd.DataFrame({"feature": feature_names, "coeffs": LASSO_coeffs})
+
+LASSO_feature_coeffs.to_json(
+    os.path.join(os.getcwd(), "Data_Tables", data_version, "LASSO_feature_coeffs.json"),
+)
+
+## Random Forest model
+
+### Impurity
+rf_immpurity_feat_imp = random_search_rf.best_estimator_["rf_reg"].feature_importances_
+
+rf_immpurity_feat_imp_coeffs = pd.DataFrame(
+    {"feature": feature_names, "impurity_importance": rf_immpurity_feat_imp}
+)
+
+rf_immpurity_feat_imp_coeffs.to_json(
+    os.path.join(
+        os.getcwd(), "Data_Tables", data_version, "rf_immpurity_feat_imp_coeffs.json"
+    ),
+)
+
+### Permutation
+rf_permutation_feat_imp = permutation_importance(
+    random_search_rf, X_train, y_train, n_repeats=10
+)
+
+rf_permutation_feat_imp_coeffs = pd.DataFrame(
+    {"feature": feature_names, "permutation_importance": rf_permutation_feat_imp}
+)
+
+rf_permutation_feat_imp_coeffs.to_json(
+    os.path.join(
+        os.getcwd(), "Data_Tables", data_version, "rf_permutation_feat_imp_coeffs.json"
+    ),
+)
 # Save models and data
 
 dump(
