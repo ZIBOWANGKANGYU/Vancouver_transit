@@ -110,7 +110,6 @@ categorical_transformer = Pipeline(
     ]
 )
 
-
 numeric_transformer = Pipeline(
     steps=[("imputer", SimpleImputer(strategy="median")), ("scaler", StandardScaler())]
 )
@@ -292,10 +291,6 @@ LASSO_coeffs = random_search_LASSO.best_estimator_["LASSO_reg"].coef_
 
 LASSO_feature_coeffs = pd.DataFrame({"feature": feature_names, "coeffs": LASSO_coeffs})
 
-LASSO_feature_coeffs.to_json(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "LASSO_feature_coeffs.json"),
-)
-
 ## Random Forest model
 
 ### Impurity
@@ -311,20 +306,6 @@ rf_immpurity_feat_imp_coeffs.to_json(
     ),
 )
 
-### Permutation
-rf_permutation_feat_imp = permutation_importance(
-    random_search_rf, X_train, y_train, n_repeats=2
-)
-
-rf_permutation_feat_imp_coeffs = pd.DataFrame(
-    {"feature": feature_names, "permutation_importance": rf_permutation_feat_imp}
-)
-
-rf_permutation_feat_imp_coeffs.to_json(
-    os.path.join(
-        os.getcwd(), "Data_Tables", data_version, "rf_permutation_feat_imp_coeffs.json"
-    ),
-)
 # Save models and data
 
 dump(
@@ -351,6 +332,25 @@ X_train.to_file(
     os.path.join(os.getcwd(), "Data_Tables", data_version, "X_train.json"),
     driver="GeoJSON",
 )
+
+dump(
+    (
+        categorical_transformer,
+        numeric_transformer,
+        proportion_transformer,
+        ColumnTransformer,
+    ),
+    os.path.join(os.getcwd(), "Models", data_version, "preprocessor.joblib"),
+)
+
+with open(
+    os.path.join(os.getcwd(), "Models", data_version, "features.json"),
+    "w+",
+) as feature_outfile:
+    json.dump(
+        (categorical_features, numeric_features, proportion_features, geometry_feature),
+        feature_outfile,
+    )
 
 with open(
     os.path.join(os.getcwd(), "Data_Tables", data_version, "X_header.json"),
