@@ -313,7 +313,7 @@ rf_immpurity_feat_imp_coeffs.to_json(
 
 ### Permutation
 rf_permutation_feat_imp = permutation_importance(
-    random_search_rf, X_train, y_train, n_repeats=10
+    random_search_rf, X_train, y_train, n_repeats=2
 )
 
 rf_permutation_feat_imp_coeffs = pd.DataFrame(
@@ -343,7 +343,7 @@ dump(
         os.getcwd(),
         "Models",
         data_version,
-        "random_search_LASSO.joblib",
+        "random_search_rf.joblib",
     ),
 )
 
