@@ -335,6 +335,7 @@ X_train.to_file(
 
 dump(
     (
+        preprocessor,
         categorical_transformer,
         numeric_transformer,
         proportion_transformer,
