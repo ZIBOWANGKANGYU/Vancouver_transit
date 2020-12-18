@@ -20,6 +20,11 @@ cwd = os.path.dirname(os.getcwd())
 os.chdir(cwd)
 data_dir = os.path.join(os.getcwd(), "TL_data", data_version)
 
+GVA_map_xlim_lower = -13746072.435927173
+GVA_map_xlim_higher = -13630000
+GVA_map_ylim_lower = 6270302.809935683
+GVA_map_ylim_higher = 6345000
+
 # Read intermediate data
 
 GVA_DA = geopandas.read_file(
@@ -144,6 +149,9 @@ print(
 CSD_within_CSD_ax = GVA_CSD_cmt_dest.plot(
     figsize=(20, 20), alpha=0.5, column="prop_within_CSD", cmap="OrRd", legend=True
 )
+CSD_within_CSD_ax.set_xlim(GVA_map_xlim_lower, GVA_map_xlim_higher)
+CSD_within_CSD_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
+
 ctx.add_basemap(CSD_within_CSD_ax, zoom=12)
 plt.title("Proportion of population transitting within CSD", fontsize=30)
 

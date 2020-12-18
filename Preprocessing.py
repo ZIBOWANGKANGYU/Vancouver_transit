@@ -95,6 +95,10 @@ GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
 land_area_threshold = (
     GVA_DA_Preprocess["vn19"].mean() + GVA_DA_Preprocess["vn19"].std() * 2
 )
+print(
+    f"There are {sum(GVA_DA_Preprocess['vn19'] >= land_area_threshold)} DA(s) with land size 2 standard deviations above the mean in 2016"
+)
+
 GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
     GVA_DA_Preprocess["vn19"] < land_area_threshold, :
 ]
@@ -104,10 +108,16 @@ pop_dens_threshold_higher = np.exp(
     np.log(GVA_DA_Preprocess["vn18"]).mean()
     + 2 * np.log(GVA_DA_Preprocess["vn18"]).std()
 )
+print(
+    f"There are {sum(GVA_DA_Preprocess['vn18'] >= pop_dens_threshold_higher)} DA(s) with population density 2 standard deviations above the mean in 2016"
+)
 
 pop_dens_threshold_lower = np.exp(
     np.log(GVA_DA_Preprocess["vn18"]).mean()
     - 2 * np.log(GVA_DA_Preprocess["vn18"]).std()
+)
+print(
+    f"There are {sum(GVA_DA_Preprocess['vn18'] <= pop_dens_threshold_lower)} DA(s) with population density 2 standard deviations below the mean in 2016"
 )
 
 GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
@@ -116,15 +126,11 @@ GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
     :,
 ]
 
-### Proportion of transit use
-GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
-    GVA_DA_Preprocess["prop_public"].isnull() == False,
-    :,
-]
-
-## By outcome variable
-
 ### Service count
+print(
+    f"There are {sum(GVA_DA_Preprocess['DA_NBA_services_count'] == 0)} DA(s) without public transit service in its neighborhood area."
+)
+
 GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
     (GVA_DA_Preprocess["DA_NBA_services_count"] != 0)
     & (GVA_DA_Preprocess["DA_NBA_services_count"].isnull() == False),
@@ -132,11 +138,28 @@ GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
 ]
 
 ### Stop count
+print(
+    f"There are {sum(GVA_DA_Preprocess['DA_NBA_stops_count'] == 0)} DA(s) without public transit stops in its neighborhood area."
+)
+
 GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
     (GVA_DA_Preprocess["DA_NBA_stops_count"] != 0)
     & (GVA_DA_Preprocess["DA_NBA_stops_count"].isnull() == False),
     :,
 ]
+
+## By outcome variable
+
+### Proportion of transit use
+print(
+    f"There are {sum(GVA_DA_Preprocess['prop_public'].isnull() == True)} DA(s) where the propotion of people using public transit is invalid."
+)
+
+GVA_DA_Preprocess = GVA_DA_Preprocess.loc[
+    GVA_DA_Preprocess["prop_public"].isnull() == False,
+    :,
+]
+
 
 ## Map removed DAs
 GVA_DA_Access["included"] = True
@@ -165,72 +188,6 @@ plt.savefig(
         "Maps",
         data_version,
         "DA_removed.png",
-    )
-)
-
-# Preliminary analyses
-## Weak yet positive relationship between accesibility and usage
-GVA_DA_Preprocess.loc[:, ["NBA_stops_PC", "prop_public"]].corr()
-
-GVA_DA_Preprocess.loc[:, ["NBA_services_PC", "prop_public"]].corr()
-
-## Visualizations
-stop_PC_prop_public = (
-    alt.Chart(
-        GVA_DA_Preprocess, title="Access to Stops in Neighborhood Area and Transit Use"
-    )
-    .mark_rect(clip=True)
-    .encode(
-        x=alt.X(
-            "NBA_stops_PC",
-            title="Number of stops per capita in neighborhood area",
-            bin=alt.Bin(maxbins=300),
-            scale=alt.Scale(domain=[0, 0.15]),
-        ),
-        y=alt.Y(
-            "prop_public", title="Proportion of transit user", bin=alt.Bin(maxbins=50)
-        ),
-        color=alt.Color("count()", title="Count"),
-    )
-)
-
-stop_PC_prop_public.save(
-    os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
-        "Figures",
-        data_version,
-        "stop_PC_prop_public.png",
-    )
-)
-
-service_PC_prop_public = (
-    alt.Chart(
-        GVA_DA_Preprocess,
-        title="Access to Services in Neighborhood Area and Transit Use",
-    )
-    .mark_rect(clip=True)
-    .encode(
-        x=alt.X(
-            "NBA_services_PC",
-            title="Number of services per capita in neighborhood area",
-            bin=alt.Bin(maxbins=1000),
-            scale=alt.Scale(domain=[0, 75]),
-        ),
-        y=alt.Y(
-            "prop_public", title="Proportion of transit user", bin=alt.Bin(maxbins=50)
-        ),
-        color=alt.Color("count()", title="Count"),
-    )
-)
-
-service_PC_prop_public.save(
-    os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
-        "Figures",
-        data_version,
-        "service_PC_prop_public.png",
     )
 )
 
@@ -471,6 +428,71 @@ GVA_DA_Modeling.dtypes
 
 GVA_DA_Modeling_train, GVA_DA_Modeling_test = train_test_split(
     GVA_DA_Modeling, test_size=0.2, random_state=2020
+)
+
+## Preliminary analyses on train set
+## Weak yet positive relationship between accesibility and usage
+GVA_DA_Preprocess.loc[:, ["NBA_services_PC", "NBA_stops_PC", "prop_public"]].corr()
+
+## Visualizations
+stop_PC_prop_public = (
+    alt.Chart(
+        GVA_DA_Modeling_train,
+        title="Access to Stops in Neighborhood Area and Transit Use",
+    )
+    .mark_rect(clip=True)
+    .encode(
+        x=alt.X(
+            "NBA_stops_PC",
+            title="Number of stops per capita in neighborhood area",
+            bin=alt.Bin(maxbins=300),
+            scale=alt.Scale(domain=[0, 0.15]),
+        ),
+        y=alt.Y(
+            "prop_public", title="Proportion of transit user", bin=alt.Bin(maxbins=50)
+        ),
+        color=alt.Color("count()", title="Count"),
+    )
+)
+
+stop_PC_prop_public.save(
+    os.path.join(
+        os.getcwd(),
+        "Vancouver_transit",
+        "Figures",
+        data_version,
+        "stop_PC_prop_public.png",
+    )
+)
+
+service_PC_prop_public = (
+    alt.Chart(
+        GVA_DA_Modeling_train,
+        title="Access to Services in Neighborhood Area and Transit Use",
+    )
+    .mark_rect(clip=True)
+    .encode(
+        x=alt.X(
+            "NBA_services_PC",
+            title="Number of services per capita in neighborhood area",
+            bin=alt.Bin(maxbins=1000),
+            scale=alt.Scale(domain=[0, 75]),
+        ),
+        y=alt.Y(
+            "prop_public", title="Proportion of transit user", bin=alt.Bin(maxbins=50)
+        ),
+        color=alt.Color("count()", title="Count"),
+    )
+)
+
+service_PC_prop_public.save(
+    os.path.join(
+        os.getcwd(),
+        "Vancouver_transit",
+        "Figures",
+        data_version,
+        "service_PC_prop_public.png",
+    )
 )
 
 ## Save dataframes

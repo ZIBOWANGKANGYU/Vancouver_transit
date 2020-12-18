@@ -7,12 +7,14 @@ Created on Sat Jun 20 16:53:54 2020
 
 data_version = "20200606"
 
+import altair as alt
 import os
 import geopandas
 from joblib import dump, load
 import json
 import numpy as np
 import pandas as pd
+import shap
 
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyRegressor
@@ -60,6 +62,71 @@ with open(
 
 GVA_DA_Modeling_header.remove("geometry")
 GVA_DA_Modeling_header.append("geometry")
+
+# Preliminary analyses on train set
+## Weak yet positive relationship between accesibility and usage
+GVA_DA_Modeling_train.loc[:, ["NBA_services_PC", "NBA_stops_PC", "prop_public"]].corr()
+
+## Visualizations
+stop_PC_prop_public = (
+    alt.Chart(
+        GVA_DA_Modeling_train,
+        title="Access to Stops in Neighborhood Area and Transit Use",
+    )
+    .mark_rect(clip=True)
+    .encode(
+        x=alt.X(
+            "NBA_stops_PC",
+            title="Number of stops per capita in neighborhood area",
+            bin=alt.Bin(maxbins=300),
+            scale=alt.Scale(domain=[0, 0.15]),
+        ),
+        y=alt.Y(
+            "prop_public", title="Proportion of transit user", bin=alt.Bin(maxbins=50)
+        ),
+        color=alt.Color("count()", title="Count"),
+    )
+)
+
+stop_PC_prop_public.save(
+    os.path.join(
+        os.getcwd(),
+        "Vancouver_transit",
+        "Figures",
+        data_version,
+        "stop_PC_prop_public.png",
+    )
+)
+
+service_PC_prop_public = (
+    alt.Chart(
+        GVA_DA_Modeling_train,
+        title="Access to Services in Neighborhood Area and Transit Use",
+    )
+    .mark_rect(clip=True)
+    .encode(
+        x=alt.X(
+            "NBA_services_PC",
+            title="Number of services per capita in neighborhood area",
+            bin=alt.Bin(maxbins=1000),
+            scale=alt.Scale(domain=[0, 75]),
+        ),
+        y=alt.Y(
+            "prop_public", title="Proportion of transit user", bin=alt.Bin(maxbins=50)
+        ),
+        color=alt.Color("count()", title="Count"),
+    )
+)
+
+service_PC_prop_public.save(
+    os.path.join(
+        os.getcwd(),
+        "Vancouver_transit",
+        "Figures",
+        data_version,
+        "service_PC_prop_public.png",
+    )
+)
 
 # Create input and outcome variables
 X_train = GVA_DA_Modeling_train.drop(["prop_public"], axis=1)
@@ -182,14 +249,27 @@ random_search_LASSO = RandomizedSearchCV(
 random_search_LASSO.fit(X_train, y_train)
 
 
-pd.DataFrame(random_search_LASSO.cv_results_)[
-    [
-        "mean_test_score",
-        "param_LASSO_reg__alpha",
-        "mean_fit_time",
-        "rank_test_score",
+LASSO_CV_results = (
+    pd.DataFrame(random_search_LASSO.cv_results_)[
+        [
+            "mean_test_score",
+            "param_LASSO_reg__alpha",
+            "mean_fit_time",
+            "rank_test_score",
+        ]
     ]
-].set_index("rank_test_score").sort_index()
+    .set_index("rank_test_score")
+    .sort_index()
+)
+
+LASSO_CV_results.to_csv(
+    os.path.join(
+        os.getcwd(),
+        "Models",
+        data_version,
+        "LASSO_CV_results.csv",
+    )
+)
 
 # Random Forest model
 
@@ -219,19 +299,31 @@ random_search_rf = RandomizedSearchCV(
 
 random_search_rf.fit(X_train, y_train)
 
-pd.DataFrame(random_search_rf.cv_results_)[
-    [
-        "mean_test_score",
-        "param_rf_reg__max_depth",
-        "param_rf_reg__max_features",
-        "param_rf_reg__min_samples_leaf",
-        "param_rf_reg__min_samples_split",
-        "param_rf_reg__n_estimators",
-        "mean_fit_time",
-        "rank_test_score",
+rf_CV_results = (
+    pd.DataFrame(random_search_rf.cv_results_)[
+        [
+            "mean_test_score",
+            "param_rf_reg__max_depth",
+            "param_rf_reg__max_features",
+            "param_rf_reg__min_samples_leaf",
+            "param_rf_reg__min_samples_split",
+            "param_rf_reg__n_estimators",
+            "mean_fit_time",
+            "rank_test_score",
+        ]
     ]
-].set_index("rank_test_score").sort_index()
+    .set_index("rank_test_score")
+    .sort_index()
+)
 
+rf_CV_results.to_csv(
+    os.path.join(
+        os.getcwd(),
+        "Models",
+        data_version,
+        "rf_CV_results.csv",
+    )
+)
 # Preliminary analyses on models
 
 # Get input variable names
@@ -304,6 +396,65 @@ rf_immpurity_feat_imp_coeffs.to_json(
     os.path.join(
         os.getcwd(), "Data_Tables", data_version, "rf_immpurity_feat_imp_coeffs.json"
     ),
+)
+
+### SHAP
+explainer = shap.TreeExplainer(random_search_rf.best_estimator_.named_steps["rf_reg"])
+
+preprocessed_data = pd.DataFrame(
+    data=preprocessor.transform(X_train),
+    columns=feature_names,
+    index=X_train.index,
+)
+
+shap_values = explainer.shap_values(preprocessed_data)
+
+with open(
+    os.path.join(
+        os.getcwd(),
+        "Models",
+        data_version,
+        "shap_values.npy",
+    ),
+    "wb",
+) as f:
+    np.save(f, shap_values)
+
+# Model performance
+
+## RMSE on the whole train set
+
+pipe_dummy.fit(X_train, y_train)
+dummy_pred_train = pipe_dummy.predict(X_train)
+print(
+    f"The train split RMSE of dummy model is {mean_squared_error(y_train, dummy_pred_train, squared=False):.3f}"
+)
+
+random_search_LASSO.best_estimator_.fit(X_train, y_train)
+LASSO_pred_train = random_search_LASSO.best_estimator_.predict(X_train)
+print(
+    f"The train split RMSE of LASSO regression is {mean_squared_error(y_train, LASSO_pred_train, squared=False):.3f}"
+)
+
+random_search_rf.best_estimator_.fit(X_train, y_train)
+rf_pred_train = random_search_rf.best_estimator_.predict(X_train)
+print(
+    f"The train split RMSE of best random forest model is {mean_squared_error(y_train, rf_pred_train, squared=False):.3f}"
+)
+
+## Performance of Random Forest model on test split
+
+GVA_DA_Modeling_test = geopandas.read_file(
+    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling_test.json")
+)
+
+X_test = GVA_DA_Modeling_test.drop(["prop_public"], axis=1)
+y_test = GVA_DA_Modeling_test["prop_public"]
+
+rf_pred_test = random_search_rf.best_estimator_.predict(X_test)
+
+print(
+    f"The test split RMSE of best random forest model is {mean_squared_error(y_test, rf_pred_test, squared=False):.3f}"
 )
 
 # Save models and data
