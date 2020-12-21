@@ -7,6 +7,7 @@ Created on Sat Jun 20 16:53:54 2020
 
 data_version = "20200606"
 
+import altair as alt
 import os
 import re
 import numpy as np
@@ -24,6 +25,8 @@ GVA_map_xlim_lower = -13746072.435927173
 GVA_map_xlim_higher = -13630000
 GVA_map_ylim_lower = 6270302.809935683
 GVA_map_ylim_higher = 6345000
+
+alt.data_transformers.disable_max_rows()
 
 # Read intermediate data
 
@@ -175,8 +178,6 @@ GVA_DA_cmt_mode["prop_walk"] = GVA_DA_cmt_mode["vn444"] / GVA_DA_cmt_mode["vn440
 GVA_DA_cmt_mode["prop_bicycle"] = GVA_DA_cmt_mode["vn445"] / GVA_DA_cmt_mode["vn440"]
 
 #### Histogram of distribution of proportion of commute mode use across DAs
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 GVA_DA_cmt_mode_hist = GVA_DA_cmt_mode.melt(
     id_vars=["DAUID"],
@@ -188,32 +189,31 @@ GVA_DA_cmt_mode_hist = GVA_DA_cmt_mode.melt(
         "prop_bicycle",
     ],
 )
+
 GVA_DA_cmt_mode_hist = GVA_DA_cmt_mode_hist.rename(
     columns={"variable": "mode", "value": "prop"}
 )
+GVA_DA_cmt_mode_hist = GVA_DA_cmt_mode_hist.query("mode !='prop_bicycle' & prop > 0")
 
-sns.displot(GVA_DA_cmt_mode_hist, x="prop", hue="mode", kind="kde", fill=True)
-plt.title(
-    "Proportion of commuters by mode of transportation in Greater Vancouver Area",
-    fontsize=30,
-)
-plt.savefig(
-    os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_mode.png")
+GVA_DA_cmt_mode_hist_plot = (
+    alt.Chart(GVA_DA_cmt_mode_hist)
+    .mark_area(opacity=0.3, interpolate="step")
+    .encode(
+        x=alt.X("prop:Q", bin=alt.Bin(maxbins=100), title="Proportion"),
+        y=alt.Y("count()", stack=None),
+        color=alt.Color("mode:N", title="Mode of commute"),
+    )
+    .properties(title="Mode of Commute Across DAs (Without Biking)")
 )
 
-sns.displot(
-    GVA_DA_cmt_mode_hist.query("mode !='bicycle'"),
-    x="prop",
-    hue="mode",
-    kind="kde",
-    fill=True,
-)
-plt.title(
-    "Proportion of commuters by mode of transportation in Greater Vancouver Area (Excluding Bicycle)"
-)
-plt.savefig(
+
+GVA_DA_cmt_mode_hist_plot.save(
     os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_mode_exl_bi.png"
+        os.getcwd(),
+        "Vancouver_transit",
+        "Figures",
+        data_version,
+        "DA_mode.png",
     )
 )
 
@@ -226,6 +226,8 @@ DA_public_cmt_ax = GVA_DA_cmt_mode.plot(
     legend=True,
     scheme="quantiles",
 )
+DA_public_cmt_ax.set_xlim(GVA_map_xlim_lower, GVA_map_xlim_higher)
+DA_public_cmt_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
 ctx.add_basemap(DA_public_cmt_ax, zoom=12)
 plt.title("Proportion of population using public transportation", fontsize=30)
 
@@ -341,6 +343,9 @@ DA_cmt_duration_ax = GVA_DA_cmt_duration.plot(
     cmap="OrRd",
     legend=True,
 )
+DA_cmt_duration_ax.set_xlim(GVA_map_xlim_lower, GVA_map_xlim_higher)
+DA_cmt_duration_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
+
 ctx.add_basemap(DA_cmt_duration_ax, zoom=12)
 plt.title("Average Commuting Time", fontsize=30)
 
