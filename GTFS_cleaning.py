@@ -8,8 +8,6 @@ data_version = "20200606"
 
 import os
 
-cwd = os.path.dirname(os.getcwd())
-os.chdir(cwd)
 data_dir = os.path.join(os.getcwd(), "TL_data", data_version)
 
 GVA_map_xlim_lower = -13746072.435927173
@@ -91,9 +89,7 @@ stops_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
 ctx.add_basemap(stops_ax, zoom=12)
 plt.title("Transit Stops in Great Vancouver Area", fontsize=30)
 plt.axis("off")
-plt.savefig(
-    os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version, "stops.png")
-)
+plt.savefig(os.path.join("Maps", data_version, "stops.png"))
 
 ## Trips
 ### Number of stops per trip
@@ -124,8 +120,6 @@ plt.xlabel("Number of stops")
 plt.title("Number of trips by stop counting", fontsize=20)
 plt.savefig(
     os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
         "Figures",
         data_version,
         "trips_cnt_stops_hist.png",
@@ -153,8 +147,6 @@ plt.xlabel("Number of trips")
 plt.title("Number of stops by trip counting", fontsize=20)
 plt.savefig(
     os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
         "Figures",
         data_version,
         "stops_cnt_trips_hist.png",
@@ -177,9 +169,7 @@ stops_ax_bz = stops_gdf_bz.plot(
 ctx.add_basemap(stops_ax_bz, zoom=12)
 plt.title("10 Busiest stops", fontsize=30)
 plt.axis("off")
-plt.savefig(
-    os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version, "stops_bz.png")
-)
+plt.savefig(os.path.join("Maps", data_version, "stops_bz.png"))
 
 ###Distribution of stops by whether busy or not
 stops_gdf_cnt_trips = stops_gdf.merge(
@@ -213,11 +203,7 @@ sm._A = []
 fig.colorbar(sm, cax=cbax, format="%1.0f")
 fig.show()
 
-fig.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "stops_cnt_trips.png"
-    )
-)
+fig.savefig(os.path.join("Maps", data_version, "stops_cnt_trips.png"))
 
 
 ## Shapes
@@ -255,9 +241,7 @@ lines_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
 ctx.add_basemap(lines_ax, zoom=12)
 plt.title("Transit Lines", fontsize=30)
 plt.axis("off")
-plt.savefig(
-    os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version, "lines.png")
-)
+plt.savefig(os.path.join("Maps", data_version, "lines.png"))
 
 trips_line = trips.merge(lines_gdf, left_on="shape_id", right_on="shape_id")
 trips_line = trips_line.merge(
@@ -271,11 +255,7 @@ plt.axvline(x=trips_line["max_dist"].median(), color="red")
 plt.ylabel("Count")
 plt.xlabel("Trip distance (km)")
 plt.title("Number of trips by distance", fontsize=20)
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Figures", data_version, "dist_hist.png"
-    )
-)
+plt.savefig(os.path.join("Figures", data_version, "dist_hist.png"))
 
 print(f"Median trip distance is {trips_line['max_dist'].median():.2f} km.")
 
@@ -293,11 +273,7 @@ lines_ax_max = lines_max_dist.plot(
 plt.title("Longest Route in Great Vancouver Transit", fontsize=30)
 plt.axis("off")
 ctx.add_basemap(lines_ax_max, zoom=12)
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "lines_max.png"
-    )
-)
+plt.savefig(os.path.join("Maps", data_version, "lines_max.png"))
 
 # Save intermediate data
 import json
