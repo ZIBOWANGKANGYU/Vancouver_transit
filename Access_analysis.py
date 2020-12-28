@@ -11,10 +11,6 @@ import os
 import re
 import numpy as np
 
-cwd = os.path.dirname(os.getcwd())
-os.chdir(cwd)
-data_dir = os.path.join(os.getcwd(), "TL_data", data_version)
-
 GVA_map_xlim_lower = -13746072.435927173
 GVA_map_xlim_higher = -13630000
 GVA_map_ylim_lower = 6270302.809935683
