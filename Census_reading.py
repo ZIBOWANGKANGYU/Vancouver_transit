@@ -8,8 +8,6 @@ import geopandas
 import os
 import numpy as np
 
-cwd = os.path.dirname(os.getcwd())
-os.chdir(cwd)
 data_dir = os.path.join(os.getcwd(), "Census")
 
 data_version = "20200606"
@@ -97,11 +95,11 @@ header = list(GVA_DA_header) + list(header)
 
 ##Move Geometry to the end of GVA_DA table
 GVA_DA.to_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_data.geojson"),
+    os.path.join("Data_Tables", data_version, "GVA_DA_data.geojson"),
     driver="GeoJSON",
 )
 GVA_DA = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_data.geojson")
+    os.path.join("Data_Tables", data_version, "GVA_DA_data.geojson")
 )
 GVA_DA.crs = BC_DA.crs
 
@@ -120,11 +118,9 @@ for column_name in GVA_DA.columns[28:-1]:
     GVA_DA[[column_name]] = GVA_DA[[column_name]].astype("float64")
 
 ##Save census tables
-GVA_DA.to_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_data.shp")
-)
+GVA_DA.to_file(os.path.join("Data_Tables", data_version, "GVA_DA_data.shp"))
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_header.json"), "w+"
+    os.path.join("Data_Tables", data_version, "GVA_DA_header.json"), "w+"
 ) as DA_header_outfile:
     json.dump(header, DA_header_outfile)
