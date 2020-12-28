@@ -20,9 +20,6 @@ import math
 from itertools import compress
 from sklearn.model_selection import train_test_split
 
-cwd = os.path.dirname(os.getcwd())
-os.chdir(cwd)
-data_dir = os.path.join(os.getcwd(), "TL_data", data_version)
 
 GVA_map_xlim_lower = -13746072.435927173
 GVA_map_xlim_higher = -13630000
@@ -33,17 +30,17 @@ GVA_map_ylim_higher = 6345000
 
 ## Usage data
 GVA_DA_cmt_usage = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_cmt_usage.json")
+    os.path.join("Data_Tables", data_version, "GVA_DA_cmt_usage.json")
 )
 
 ## Access data
 GVA_DA_Access = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Access.json")
+    os.path.join("Data_Tables", data_version, "GVA_DA_Access.json")
 )
 
 ## Header
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_header.json"), "r"
+    os.path.join("Data_Tables", data_version, "GVA_DA_header.json"), "r"
 ) as DA_header_outfile:
     header = json.load(DA_header_outfile)
 
@@ -183,8 +180,6 @@ plt.title("Removed DAs", fontsize=30)
 
 plt.savefig(
     os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
         "Maps",
         data_version,
         "DA_removed.png",
@@ -433,26 +428,22 @@ GVA_DA_Modeling_train, GVA_DA_Modeling_test = train_test_split(
 ## Save dataframes
 
 GVA_DA_Modeling.to_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling.json"),
+    os.path.join("Data_Tables", data_version, "GVA_DA_Modeling.json"),
     driver="GeoJSON",
 )
 
 GVA_DA_Modeling_train.to_file(
-    os.path.join(
-        os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling_train.json"
-    ),
+    os.path.join("Data_Tables", data_version, "GVA_DA_Modeling_train.json"),
     driver="GeoJSON",
 )
 
 GVA_DA_Modeling_test.to_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling_test.json"),
+    os.path.join("Data_Tables", data_version, "GVA_DA_Modeling_test.json"),
     driver="GeoJSON",
 )
 
 with open(
-    os.path.join(
-        os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling_header.json"
-    ),
+    os.path.join("Data_Tables", data_version, "GVA_DA_Modeling_header.json"),
     "w+",
 ) as GVA_DA_Modeling_header_outfile:
     json.dump(GVA_DA_Modeling_header, GVA_DA_Modeling_header_outfile)

@@ -22,45 +22,43 @@ import json
 import geopandas
 
 GVA_DA = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_data.shp")
+    os.path.join("Data_Tables", data_version, "GVA_DA_data.shp")
 )
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_header.json"), "r"
+    os.path.join("Data_Tables", data_version, "GVA_DA_header.json"), "r"
 ) as DA_header_outfile:
     header = json.load(DA_header_outfile)
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "calendar.json"), "r"
+    os.path.join("Data_Tables", data_version, "calendar.json"), "r"
 ) as calendar_outfile:
     calendar = pd.read_json(json.load(calendar_outfile))
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "calendar_dates.json"), "r"
+    os.path.join("Data_Tables", data_version, "calendar_dates.json"), "r"
 ) as calendar_dates_outfile:
     calendar_dates = pd.read_json(json.load(calendar_dates_outfile))
 
-lines_gdf = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "lines.json")
-)
+lines_gdf = geopandas.read_file(os.path.join("Data_Tables", data_version, "lines.json"))
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "routes.json"), "r"
+    os.path.join("Data_Tables", data_version, "routes.json"), "r"
 ) as routes_outfile:
     routes = pd.read_json(json.load(routes_outfile))
 
 shapes_gdf = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "shapes.json")
+    os.path.join("Data_Tables", data_version, "shapes.json")
 )
 
-filelist_fd = os.listdir(os.path.join(os.getcwd(), "Data_Tables", data_version))
+filelist_fd = os.listdir(os.path.join("Data_Tables", data_version))
 filelist = [
     filename for filename in filelist_fd if bool(re.match("stop_times.", filename))
 ]
 
 ## The stop_times table is very large in size and should be loaded in batches.
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "stop_times0.json"), "r"
+    os.path.join("Data_Tables", data_version, "stop_times0.json"), "r"
 ) as stop_times_outfile:
     stop_times = pd.read_json(json.load(stop_times_outfile))
 
@@ -68,17 +66,15 @@ for i in range(1, len(filelist)):
     print(i)
     filename = "stop_times" + str(i) + ".json"
     with open(
-        os.path.join(os.getcwd(), "Data_Tables", data_version, filename), "r"
+        os.path.join("Data_Tables", data_version, filename), "r"
     ) as stop_times_outfile:
         stop_times_b = pd.read_json(json.load(stop_times_outfile))
     stop_times = stop_times.append(stop_times_b, ignore_index=True)
 
-stops_gdf = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "stops.json")
-)
+stops_gdf = geopandas.read_file(os.path.join("Data_Tables", data_version, "stops.json"))
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "trips.json"), "r"
+    os.path.join("Data_Tables", data_version, "trips.json"), "r"
 ) as trips_outfile:
     trips = pd.read_json(json.load(trips_outfile))
 
@@ -115,11 +111,7 @@ DA_Burnaby_ax = GVA_DA_Burnaby.plot(edgecolor="red", figsize=(20, 20), alpha=0.5
 ctx.add_basemap(DA_Burnaby_ax, zoom=12)
 plt.title("DAs in Burnaby CSD", fontsize=30)
 plt.axis("off")
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_Burnaby.png"
-    )
-)
+plt.savefig(os.path.join("Maps", data_version, "DA_Burnaby.png"))
 
 ### Population
 
@@ -143,9 +135,7 @@ sm._A = []
 fig.colorbar(sm, cax=cbax, format="%1.0f")
 fig.show()
 
-fig.savefig(
-    os.path.join(os.getcwd(), "Vancouver_transit", "Maps", data_version, "pop2016.png")
-)
+fig.savefig(os.path.join("Maps", data_version, "pop2016.png"))
 
 ####Population density
 GVA_DA_pop_dense = pd.concat([GVA_base, GVA_DA[["vn18"]]], axis=1)
@@ -159,11 +149,7 @@ plt.axis("off")
 ctx.add_basemap(GVA_DA_pop_dense_ax, zoom=12)
 plt.title("2016 Population density by Dissemination Area: Top 10%", fontsize=30)
 
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "pop_dense201610pc.png"
-    )
-)
+plt.savefig(os.path.join("Maps", data_version, "pop_dense201610pc.png"))
 print(
     f"The CSDs with highest number of DAs with top 10% population densities are {list(GVA_DA_pop_dense.CSDNAME.value_counts().index)[:5]}"
 )
@@ -200,11 +186,7 @@ GVA_DA_Access_no_stop_ax.set_xlim(GVA_map_xlim_lower, GVA_map_xlim_higher)
 GVA_DA_Access_no_stop_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
 plt.axis("off")
 
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_NBA_no_stops.png"
-    )
-)
+plt.savefig(os.path.join("Maps", data_version, "DA_NBA_no_stops.png"))
 
 ### Mapping the top 10%
 GVA_DA_stops_PC = pd.concat([GVA_base, GVA_DA_Access[["NBA_stops_PC"]]], axis=1)
@@ -223,11 +205,7 @@ GVA_DA_stops_PC_ax.set_xlim(GVA_map_xlim_lower, GVA_map_xlim_higher)
 GVA_DA_stops_PC_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
 plt.axis("off")
 
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "NBA_stops_PC_10pc.png"
-    )
-)
+plt.savefig(os.path.join("Maps", data_version, "NBA_stops_PC_10pc.png"))
 
 ### Number of services in region (per resident)
 stops_cnt_services = stop_times.groupby("stop_id").size().rename("stop_cnt_services")
@@ -262,11 +240,7 @@ plt.title(
     "DAs Whose Neighborhood Area Does Not Have Transit Service",
     fontsize=24,
 )
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_NBA_no_services.png"
-    )
-)
+plt.savefig(os.path.join("Maps", data_version, "DA_NBA_no_services.png"))
 
 ### Mapping the top 10%
 GVA_DA_services_PC = pd.concat([GVA_base, GVA_DA_Access[["NBA_services_PC"]]], axis=1)
@@ -288,8 +262,6 @@ plt.title(
 
 plt.savefig(
     os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
         "Maps",
         data_version,
         "NBA_services_PC_10pc.png",

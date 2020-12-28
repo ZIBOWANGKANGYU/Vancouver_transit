@@ -37,10 +37,6 @@ from sklearn.preprocessing import (
     MinMaxScaler,
 )
 
-cwd = os.path.dirname(os.getcwd())
-os.chdir(cwd)
-data_dir = os.path.join(os.getcwd(), "TL_data", data_version)
-
 GVA_map_xlim_lower = -13746072.435927173
 GVA_map_xlim_higher = -13630000
 GVA_map_ylim_lower = 6270302.809935683
@@ -49,13 +45,11 @@ GVA_map_ylim_higher = 6345000
 # Import data
 
 GVA_DA_Modeling_train = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling_train.json")
+    os.path.join("Data_Tables", data_version, "GVA_DA_Modeling_train.json")
 )
 
 with open(
-    os.path.join(
-        os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling_header.json"
-    ),
+    os.path.join("Data_Tables", data_version, "GVA_DA_Modeling_header.json"),
     "r",
 ) as GVA_DA_Modeling_header_outfile:
     GVA_DA_Modeling_header = json.load(GVA_DA_Modeling_header_outfile)
@@ -90,8 +84,6 @@ stop_PC_prop_public = (
 
 stop_PC_prop_public.save(
     os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
         "Figures",
         data_version,
         "stop_PC_prop_public.png",
@@ -120,8 +112,6 @@ service_PC_prop_public = (
 
 service_PC_prop_public.save(
     os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
         "Figures",
         data_version,
         "service_PC_prop_public.png",
@@ -264,7 +254,6 @@ LASSO_CV_results = (
 
 LASSO_CV_results.to_csv(
     os.path.join(
-        os.getcwd(),
         "Models",
         data_version,
         "LASSO_CV_results.csv",
@@ -318,7 +307,6 @@ rf_CV_results = (
 
 rf_CV_results.to_csv(
     os.path.join(
-        os.getcwd(),
         "Models",
         data_version,
         "rf_CV_results.csv",
@@ -331,7 +319,9 @@ rf_CV_results.to_csv(
 ### Define function get_column_names_from_ColumnTransformer
 
 
-def get_column_names_from_ColumnTransformer(column_transformer):
+def get_column_names_from_ColumnTransformer(
+    column_transformer,
+):  # Adapted from https://github.com/scikit-learn/scikit-learn/issues/12525
 
     col_name = []
 
@@ -393,9 +383,7 @@ rf_immpurity_feat_imp_coeffs = pd.DataFrame(
 )
 
 rf_immpurity_feat_imp_coeffs.to_json(
-    os.path.join(
-        os.getcwd(), "Data_Tables", data_version, "rf_immpurity_feat_imp_coeffs.json"
-    ),
+    os.path.join("Data_Tables", data_version, "rf_immpurity_feat_imp_coeffs.json"),
 )
 
 ### SHAP
@@ -411,7 +399,6 @@ shap_values = explainer.shap_values(preprocessed_data)
 
 with open(
     os.path.join(
-        os.getcwd(),
         "Models",
         data_version,
         "shap_values.npy",
@@ -445,7 +432,7 @@ print(
 ## Performance of Random Forest model on test split
 
 GVA_DA_Modeling_test = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_Modeling_test.json")
+    os.path.join("Data_Tables", data_version, "GVA_DA_Modeling_test.json")
 )
 
 X_test = GVA_DA_Modeling_test.drop(["prop_public"], axis=1)
@@ -462,7 +449,6 @@ print(
 dump(
     random_search_LASSO,
     os.path.join(
-        os.getcwd(),
         "Models",
         data_version,
         "random_search_LASSO.joblib",
@@ -472,7 +458,6 @@ dump(
 dump(
     random_search_rf,
     os.path.join(
-        os.getcwd(),
         "Models",
         data_version,
         "random_search_rf.joblib",
@@ -480,7 +465,7 @@ dump(
 )
 
 X_train.to_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "X_train.json"),
+    os.path.join("Data_Tables", data_version, "X_train.json"),
     driver="GeoJSON",
 )
 
@@ -492,11 +477,11 @@ dump(
         proportion_transformer,
         ColumnTransformer,
     ),
-    os.path.join(os.getcwd(), "Models", data_version, "preprocessor.joblib"),
+    os.path.join("Models", data_version, "preprocessor.joblib"),
 )
 
 with open(
-    os.path.join(os.getcwd(), "Models", data_version, "features.json"),
+    os.path.join("Models", data_version, "features.json"),
     "w+",
 ) as feature_outfile:
     json.dump(
@@ -505,13 +490,13 @@ with open(
     )
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "X_header.json"),
+    os.path.join("Data_Tables", data_version, "X_header.json"),
     "w+",
 ) as X_header_outfile:
     json.dump(X_header, X_header_outfile)
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "y_train.json"),
+    os.path.join("Data_Tables", data_version, "y_train.json"),
     "w+",
 ) as y_train_outfile:
     json.dump(y_train.to_json(), y_train_outfile)
