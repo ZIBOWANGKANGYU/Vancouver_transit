@@ -17,8 +17,6 @@ import json
 import geopandas
 import matplotlib.pyplot as plt
 
-cwd = os.path.dirname(os.getcwd())
-os.chdir(cwd)
 data_dir = os.path.join(os.getcwd(), "TL_data", data_version)
 
 GVA_map_xlim_lower = -13746072.435927173
@@ -31,45 +29,43 @@ alt.data_transformers.disable_max_rows()
 # Read intermediate data
 
 GVA_DA = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_data.shp")
+    os.path.join("Data_Tables", data_version, "GVA_DA_data.shp")
 )
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_header.json"), "r"
+    os.path.join("Data_Tables", data_version, "GVA_DA_header.json"), "r"
 ) as DA_header_outfile:
     header = json.load(DA_header_outfile)
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "calendar.json"), "r"
+    os.path.join("Data_Tables", data_version, "calendar.json"), "r"
 ) as calendar_outfile:
     calendar = pd.read_json(json.load(calendar_outfile))
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "calendar_dates.json"), "r"
+    os.path.join("Data_Tables", data_version, "calendar_dates.json"), "r"
 ) as calendar_dates_outfile:
     calendar_dates = pd.read_json(json.load(calendar_dates_outfile))
 
-lines_gdf = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "lines.json")
-)
+lines_gdf = geopandas.read_file(os.path.join("Data_Tables", data_version, "lines.json"))
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "routes.json"), "r"
+    os.path.join("Data_Tables", data_version, "routes.json"), "r"
 ) as routes_outfile:
     routes = pd.read_json(json.load(routes_outfile))
 
 shapes_gdf = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "shapes.json")
+    os.path.join("Data_Tables", data_version, "shapes.json")
 )
 
-filelist_fd = os.listdir(os.path.join(os.getcwd(), "Data_Tables", data_version))
+filelist_fd = os.listdir(os.path.join("Data_Tables", data_version))
 filelist = [
     filename for filename in filelist_fd if bool(re.match("stop_times.", filename))
 ]
 
 ## The stop_times table is very large in size and should be loaded in batches.
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "stop_times0.json"), "r"
+    os.path.join("Data_Tables", data_version, "stop_times0.json"), "r"
 ) as stop_times_outfile:
     stop_times = pd.read_json(json.load(stop_times_outfile))
 
@@ -77,17 +73,15 @@ for i in range(1, len(filelist)):
     print(i)
     filename = "stop_times" + str(i) + ".json"
     with open(
-        os.path.join(os.getcwd(), "Data_Tables", data_version, filename), "r"
+        os.path.join("Data_Tables", data_version, filename), "r"
     ) as stop_times_outfile:
         stop_times_b = pd.read_json(json.load(stop_times_outfile))
     stop_times = stop_times.append(stop_times_b, ignore_index=True)
 
-stops_gdf = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "stops.json")
-)
+stops_gdf = geopandas.read_file(os.path.join("Data_Tables", data_version, "stops.json"))
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "trips.json"), "r"
+    os.path.join("Data_Tables", data_version, "trips.json"), "r"
 ) as trips_outfile:
     trips = pd.read_json(json.load(trips_outfile))
 
@@ -158,11 +152,7 @@ CSD_within_CSD_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
 ctx.add_basemap(CSD_within_CSD_ax, zoom=12)
 plt.title("Proportion of population transitting within CSD", fontsize=30)
 
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "commut_within_csd.png"
-    )
-)
+plt.savefig(os.path.join("Maps", data_version, "commut_within_csd.png"))
 
 ### Mode of commuting
 GVA_DA_cmt_mode = GVA_DA_cmt.copy()
@@ -209,8 +199,6 @@ GVA_DA_cmt_mode_hist_plot = (
 
 GVA_DA_cmt_mode_hist_plot.save(
     os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
         "Figures",
         data_version,
         "DA_mode.png",
@@ -231,11 +219,7 @@ DA_public_cmt_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
 ctx.add_basemap(DA_public_cmt_ax, zoom=12)
 plt.title("Proportion of population using public transportation", fontsize=30)
 
-plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "DA_public_prop.png"
-    )
-)
+plt.savefig(os.path.join("Maps", data_version, "DA_public_prop.png"))
 
 #### CSD level
 GVA_CSD_cmt_mode = GVA_DA_cmt.dissolve(by="CSDNAME", aggfunc="sum")
@@ -351,8 +335,6 @@ plt.title("Average Commuting Time", fontsize=30)
 
 plt.savefig(
     os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
         "Maps",
         data_version,
         "DA_commute_duration.png",
@@ -479,6 +461,6 @@ GVA_DA_cmt_usage = pd.concat(
 )
 
 GVA_DA_cmt_usage.to_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "GVA_DA_cmt_usage.json"),
+    os.path.join("Data_Tables", data_version, "GVA_DA_cmt_usage.json"),
     driver="GeoJSON",
 )
