@@ -10,8 +10,6 @@ data_version = "20200606"
 import os
 import re
 
-cwd = os.path.dirname(os.getcwd())
-os.chdir(cwd)
 data_dir = os.path.join(os.getcwd(), "TL_data", data_version)
 
 # Read intermediate data
@@ -20,26 +18,24 @@ import json
 import geopandas
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "calendar.json"), "r"
+    os.path.join("Data_Tables", data_version, "calendar.json"), "r"
 ) as calendar_outfile:
     calendar = pd.read_json(json.load(calendar_outfile))
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "calendar_dates.json"), "r"
+    os.path.join("Data_Tables", data_version, "calendar_dates.json"), "r"
 ) as calendar_dates_outfile:
     calendar_dates = pd.read_json(json.load(calendar_dates_outfile))
 
-lines_gdf = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "lines.json")
-)
+lines_gdf = geopandas.read_file(os.path.join("Data_Tables", data_version, "lines.json"))
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "routes.json"), "r"
+    os.path.join("Data_Tables", data_version, "routes.json"), "r"
 ) as routes_outfile:
     routes = pd.read_json(json.load(routes_outfile))
 
 shapes_gdf = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "shapes.json")
+    os.path.join("Data_Tables", data_version, "shapes.json")
 )
 
 filelist_fd = os.listdir(os.path.join(os.getcwd(), "Data_Tables", data_version))
@@ -49,7 +45,7 @@ filelist = [
 
 ## The stop_times table is very large in size and should be loaded in batches.
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "stop_times0.json"), "r"
+    os.path.join("Data_Tables", data_version, "stop_times0.json"), "r"
 ) as stop_times_outfile:
     stop_times = pd.read_json(json.load(stop_times_outfile))
 
@@ -57,17 +53,15 @@ for i in range(1, len(filelist)):
     print(i)
     filename = "stop_times" + str(i) + ".json"
     with open(
-        os.path.join(os.getcwd(), "Data_Tables", data_version, filename), "r"
+        os.path.join("Data_Tables", data_version, filename), "r"
     ) as stop_times_outfile:
         stop_times_b = pd.read_json(json.load(stop_times_outfile))
     stop_times = stop_times.append(stop_times_b, ignore_index=True)
 
-stops_gdf = geopandas.read_file(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "stops.json")
-)
+stops_gdf = geopandas.read_file(os.path.join("Data_Tables", data_version, "stops.json"))
 
 with open(
-    os.path.join(os.getcwd(), "Data_Tables", data_version, "trips.json"), "r"
+    os.path.join("Data_Tables", data_version, "trips.json"), "r"
 ) as trips_outfile:
     trips = pd.read_json(json.load(trips_outfile))
 
@@ -97,8 +91,6 @@ plt.xlabel("Arrival Time")
 plt.title("Number of Services by Arrival Time", fontsize=20)
 plt.savefig(
     os.path.join(
-        os.getcwd(),
-        "Vancouver_transit",
         "Figures",
         data_version,
         "arrivaltime_hist.png",
@@ -169,7 +161,5 @@ for i in range(10):
     )
 fig.suptitle("Number of Services by Arrival Time: the busiest stops", fontsize=16)
 plt.savefig(
-    os.path.join(
-        os.getcwd(), "Vancouver_transit", "Maps", data_version, "stops_bz_arr_t.png"
-    )
+    os.path.join("Maps", data_version, "stops_bz_arr_t.png")
 )  # Stops in Vancouver, Burnabay and west Richmond have later average arrival times than stops elsewhere
