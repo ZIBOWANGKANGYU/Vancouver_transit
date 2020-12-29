@@ -2,11 +2,17 @@
 
 In this project, I try to understand the relationship between demographic characters and use of public transit in the Greater Vancouver Area, and model how access to transit services and infrastructure impacts transit use.
 
-Firstly, I gathered [General Transit Feed Specification (GTFS)](https://gtfs.org/) data for Greater Vancouver, and Canada's 2016 census. I cleaned both datasets and selected relevant variables. 
+Firstly, I gathered [General Transit Feed Specification (GTFS)](https://gtfs.org/) data for Greater Vancouver, and Canada's 2016 census. I cleaned both datasets and selected relevant variables.
 
-Secondly, I extracted information about people's access to, and usage of public transportation across Greater Vancouver's neighborhoods. I also conducted an overview of Vancouver's transit service, and local residents' demographic characters in general. 
+Secondly, I extracted information about people's access to, and usage of public transportation across Greater Vancouver's neighborhoods. I also conducted an overview of Vancouver's transit service, and local residents' demographic characters in general.
 
-Thirdly, I built the data table for machine learning modeling, and applied LASSO and random forest models. I concluded that access to transit services is a key determinant of residents' use of public transportation. I identified areas where increased transit services will lead to the most increase in transit usage. 
+Thirdly, I built the data table for machine learning modeling, and applied LASSO and random forest models. I concluded that access to transit services is a key determinant of residents' use of public transportation. I identified areas where increased transit services will lead to the most increase in transit usage.
+
+# Report
+
+The final report can be found [here](https://zibowangkangyu.github.io/Vancouver_transit4/), and a Jupyter Notebook for presentation can be found [here](https://nbviewer.jupyter.org/github/ZIBOWANGKANGYU/Vancouver_transit/blob/master/Model_analysis.ipynb). 
+
+Other posts in this series include [data sources](https://zibowangkangyu.github.io/Vancouver_transit1/), [key variables](https://zibowangkangyu.github.io/Vancouver_transit2/) and [machine learning modeling](https://zibowangkangyu.github.io/Vancouver_transit3/). 
 
 # Usage
 
