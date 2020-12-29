@@ -8,30 +8,28 @@ import geopandas
 import os
 import numpy as np
 
-data_dir = os.path.join(os.getcwd(), "Census")
-
 data_version = "20200606"
 
 # Federal Electoral Districts
-file = geopandas.read_file(os.path.join(data_dir, "lfed000b16a_e", "lfed000b16a_e.shp"))
+file = geopandas.read_file(os.path.join("Census", "lfed000b16a_e", "lfed000b16a_e.shp"))
 BC_FED = file.loc[file["PRNAME"] == "British Columbia / Colombie-Britannique"]
 print(f"There are {len(BC_FED.index)} federal electoral districts in British Columbia.")
 
-BC_FED.to_file(os.path.join(os.getcwd(), "Census", "BC_FED.shp"))
+BC_FED.to_file(os.path.join("Census", "BC_FED.shp"))
 
 # Census Subdivisions
-file = geopandas.read_file(os.path.join(data_dir, "lcsd000b16a_e", "lcsd000b16a_e.shp"))
+file = geopandas.read_file(os.path.join("Census", "lcsd000b16a_e", "lcsd000b16a_e.shp"))
 BC_CSD = file.loc[file["PRNAME"] == "British Columbia / Colombie-Britannique"]
 print(f"There are {len(BC_CSD.index)} census subdivisions in British Columbia.")
 
-BC_CSD.to_file(os.path.join(os.getcwd(), "Census", "BC_CSD.shp"))
+BC_CSD.to_file(os.path.join("Census", "BC_CSD.shp"))
 
 # Dissemination Areas
-file = geopandas.read_file(os.path.join(data_dir, "lda_000b16a_e", "lda_000b16a_e.shp"))
+file = geopandas.read_file(os.path.join("Census", "lda_000b16a_e", "lda_000b16a_e.shp"))
 BC_DA = file.loc[file["PRNAME"] == "British Columbia / Colombie-Britannique"]
 print(f"There are {len(BC_DA.index)} dissemination areas in British Columbia.")
 
-BC_DA.to_file(os.path.join(os.getcwd(), "Census", "BC_DA.shp"))
+BC_DA.to_file(os.path.join("Census", "BC_DA.shp"))
 
 GVA_DA = BC_DA.loc[BC_DA["CDNAME"] == "Greater Vancouver"]  ##Greater Vancouver Area
 print(f"There are {len(GVA_DA.index)} dissemination areas in Greater Vancouver.")
@@ -60,13 +58,13 @@ def read_census_tables(batch_list):
     data_table_list = []
     header_list = []
     for batch in batch_list:
-        pd_dir = os.path.join(data_dir, "data_2016", batch + ".dbf")
+        pd_dir = os.path.join("Census", "data_2016", batch + ".dbf")
         table = DBF(pd_dir, load=True)
         table_df = pd.DataFrame(
             np.array([list(record.values()) for record in table.records])
         )
         lengths.append(len(table.records))
-        header_dir = os.path.join(data_dir, "data_2016", batch + ".txt")
+        header_dir = os.path.join("Census", "data_2016", batch + ".txt")
         header = pd.read_table(header_dir)
         result = all(element == lengths[0] for element in lengths)
         if not result:
