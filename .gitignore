@@ -3,4 +3,7 @@ Models/20200606/*
 !Models/20200606/.gitkeep
 Data_Tables/20200606/*
 !Data_Tables/20200606/.gitkeep
-TL_data
+TL_data/20200606/*
+!TL_data/20200606/.gitkeep
+Census.zip
+TL_data.zip

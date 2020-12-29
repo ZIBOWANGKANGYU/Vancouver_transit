@@ -10,16 +10,37 @@ Thirdly, I built the data table for machine learning modeling, and applied LASSO
 
 # Usage
 
+## Download census data
+
+Ideally, we would want to use an API to directly download Canada's 2016 census data. However, the volumne of data required by this analysis, which goes down to the Dissemination Area (DA) level, exceeds what available free APIs can download. Therefore, I have stored the zipped dataset in my personal OneDrive folder for you to download. 
+
+    wget --no-check-certificate -O Census.zip "https://onedrive.live.com/download?cid=FD70C8A06BE32527&resid=FD70C8A06BE32527%21701526&authkey=ADw5q9yT-Y-RX0A"
+
+## Download GTFS data
+
+    wget --no-check-certificate -O TL_data.zip https://transitfeeds.com/p/translink-vancouver/29/20200606/download    
+
+## Unzip downloaded data
+
+    python Unzip_downloads.py
+
+## Data cleaning
+
     python GTFS_cleaning.py
     python Census_reading.py
+
+## Exploratory Analyses
+
     python Temporal_analysis.py
     python Access_analysis.py
     python Usage_analysis.py
+
+## Modeling
+
     python Preprocessing.py
     python Modelling.py
     jupyter nbconvert --to notebook --execute Model_analysis.ipynb --ExecutePreprocessor.timeout=600
     jupyter nbconvert --to HTML Model_analysis.ipynb
-
 
 # License
 
