@@ -1,5 +1,6 @@
 Census/
 Models/20200606/*
 !Models/20200606/.gitkeep
-Data_Tables/
+Data_Tables/20200606/*
+!Data_Tables/20200606/.gitkeep
 TL_data
