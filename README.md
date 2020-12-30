@@ -10,7 +10,7 @@ Thirdly, I built the data table for machine learning modeling, and applied LASSO
 
 # Report
 
-The final report can be found [here](https://zibowangkangyu.github.io/Vancouver_transit4/), and a Jupyter Notebook for presentation can be found [here](https://nbviewer.jupyter.org/github/ZIBOWANGKANGYU/Vancouver_transit/blob/master/Model_analysis.ipynb). 
+The final report can be found [here](https://zibowangkangyu.github.io/Vancouver_transit4/), and a Jupyter Notebook for presentation can be found [here](https://nbviewer.jupyter.org/github/ZIBOWANGKANGYU/Vancouver_transit/blob/master/Report.ipynb). 
 
 Other posts in this series include [data sources](https://zibowangkangyu.github.io/Vancouver_transit1/), [key variables](https://zibowangkangyu.github.io/Vancouver_transit2/) and [machine learning modeling](https://zibowangkangyu.github.io/Vancouver_transit3/). 
 
@@ -26,7 +26,7 @@ To replicate the analysis, install
 repository and run the following commands at the command line/terminal
 from the root directory of this project:
 
-    docker run --rm -it -v /$(pwd):/home transit_van /bin/bash
+    docker run --rm -it -v /$(pwd):/home zibowangkangyu/transit_van /bin/bash
     cd home
 
 ### Download census data
@@ -41,25 +41,24 @@ Ideally, we would want to use an API to directly download Canada's 2016 census d
 
 ### Unzip downloaded data
 
-    python Unzip_downloads.py
+    python src/Unzip_downloads.py
 
 ### Data cleaning
 
-    python GTFS_cleaning.py
-    python Census_reading.py
+    python src/GTFS_cleaning.py
+    python src/Census_reading.py
 
-### Exploratory Analyses
+### Exploratory analyses
 
-    python Temporal_analysis.py
-    python Access_analysis.py
-    python Usage_analysis.py
+    python src/Temporal_analysis.py
+    python src/Access_analysis.py
+    python src/Usage_analysis.py
 
-### Modeling
+### Modeling and Analyses
 
-    python Preprocessing.py
-    python Modelling.py
-    jupyter nbconvert --to notebook --execute Model_analysis.ipynb --ExecutePreprocessor.timeout=600
-    jupyter nbconvert --to HTML Model_analysis.ipynb
+    python src/Preprocessing.py
+    python src/Modeling.py
+    jupyter nbconvert --to HTML --execute Report.ipynb --ExecutePreprocessor.timeout=600
 
 # License
 

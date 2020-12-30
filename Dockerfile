@@ -21,6 +21,7 @@ RUN conda update conda
 RUN conda install -y -c anaconda \ 
     docopt \
     requests
+RUN conda install rtree -y
 
 RUN pip install -Iv altair==4.1.0
 RUN pip install -Iv contextily==1.0.0
@@ -33,6 +34,8 @@ RUN pip install -Iv scikit-learn==0.23.2
 RUN pip install -Iv shap==0.37.0
 RUN pip install -Iv shapely==1.7.1
 RUN pip install -Iv tabulate==0.8.7
+RUN pip install descartes
+RUN pip install mapclassify
+RUN conda install rtree
 
-RUN conda install -y -c conda-forge feather-format
 RUN conda install -c conda-forge altair_saver
