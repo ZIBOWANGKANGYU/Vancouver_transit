@@ -1,5 +1,6 @@
 FROM python:3.8-buster
 
+# Install conda
 RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh -O ~/anaconda.sh && \
     /bin/bash ~/anaconda.sh -b -p /opt/conda && \
     rm ~/anaconda.sh && \
@@ -13,9 +14,9 @@ RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_6
 
 ENV PATH="/opt/conda/bin:${PATH}"
 
-# install docopt python package
 RUN conda update conda
 
+# Install modules
 RUN conda install -y -c anaconda \ 
     docopt \
     requests
