@@ -2,7 +2,7 @@ name: Publish Dockerfile on DockerHub
 on: 
   push: 
     branches:
-      - main
+      - master
     paths: 
       - 'Dockerfile'
 jobs:
@@ -17,7 +17,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         WITH_V: true
-        RELEASE_BRANCHES: main
+        RELEASE_BRANCHES: master
       id: bump
     - name: Create Release
       id: create_release
