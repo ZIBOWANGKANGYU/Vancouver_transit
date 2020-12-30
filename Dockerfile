@@ -34,5 +34,4 @@ RUN pip install -Iv shapely==1.7.1
 RUN pip install -Iv tabulate==0.8.7
 
 RUN conda install -y -c conda-forge feather-format
-
 RUN conda install -c conda-forge altair_saver
