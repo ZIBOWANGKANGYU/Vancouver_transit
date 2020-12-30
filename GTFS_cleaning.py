@@ -6,7 +6,11 @@ Created on Sat Jun 13 18:06:49 2020
 """
 data_version = "20200606"
 
+import altair as alt
 import os
+import pandas as pd
+
+alt.data_transformers.disable_max_rows()
 
 data_dir = os.path.join(os.getcwd(), "TL_data", data_version)
 
@@ -16,7 +20,6 @@ GVA_map_ylim_lower = 6270302.809935683
 GVA_map_ylim_higher = 6345000
 
 # Read files
-import pandas as pd
 
 calendar = pd.read_csv(os.path.join(data_dir, "calendar.txt"))
 
@@ -113,12 +116,22 @@ print(
     f"Route {routes.loc[routes['route_id'] == route_min_stops[0]]['route_long_name'].tolist()[0]} has {min(trips_cnt_stops['num_stops'])} stops, which is the least among all routes."
 )
 
-plt.hist(trips_cnt_stops["num_stops"], density=False, bins=30)
-plt.axvline(x=trips_cnt_stops["num_stops"].median(), color="red")
-plt.ylabel("Count")
-plt.xlabel("Number of stops")
-plt.title("Number of trips by stop counting", fontsize=20)
-plt.savefig(
+trips_cnt_stops_hist = (
+    alt.Chart(trips_cnt_stops)
+    .mark_bar()
+    .encode(
+        x=alt.X("num_stops:Q", bin=alt.Bin(maxbins=40), title="Number of stops"),
+        y="count()",
+    )
+    .properties(title="Number of trips by stop counting")
+)
+rule = (
+    alt.Chart(trips_cnt_stops)
+    .mark_rule(color="red")
+    .encode(x="mean(num_stops):Q", size=alt.value(5))
+)
+
+(trips_cnt_stops_hist + rule).save(
     os.path.join(
         "Figures",
         data_version,
@@ -140,12 +153,22 @@ print(
     f"Stop {stops.loc[stops['stop_id'] == stop_max_trips[0]]['stop_name'].tolist()[0]} serves {max(stops_cnt_trips['num_trips'])} trips, which is the most among all stops."
 )
 
-plt.hist(stops_cnt_trips["num_trips"], density=False, bins=30)
-plt.axvline(x=stops_cnt_trips["num_trips"].median(), color="red")
-plt.ylabel("Count")
-plt.xlabel("Number of trips")
-plt.title("Number of stops by trip counting", fontsize=20)
-plt.savefig(
+stops_cnt_trips_hist = (
+    alt.Chart(stops_cnt_trips)
+    .mark_bar()
+    .encode(
+        x=alt.X("num_trips:Q", bin=alt.Bin(maxbins=50), title="Number of trips"),
+        y="count()",
+    )
+    .properties(title="Number of stops by trip counting")
+)
+rule = (
+    alt.Chart(stops_cnt_trips)
+    .mark_rule(color="red")
+    .encode(x="mean(num_trips):Q", size=alt.value(5))
+)
+
+(stops_cnt_trips_hist + rule).save(
     os.path.join(
         "Figures",
         data_version,
@@ -250,12 +273,25 @@ trips_line = trips_line.merge(
     right_on="route_id",
 )
 
-plt.hist(trips_line["max_dist"], density=False, bins=50)
-plt.axvline(x=trips_line["max_dist"].median(), color="red")
-plt.ylabel("Count")
-plt.xlabel("Trip distance (km)")
-plt.title("Number of trips by distance", fontsize=20)
-plt.savefig(os.path.join("Figures", data_version, "dist_hist.png"))
+trips_line_hist_df = pd.DataFrame(trips_line.drop(["geometry"], axis=1))
+trips_line_hist = (
+    alt.Chart(trips_line_hist_df)
+    .mark_bar()
+    .encode(
+        x=alt.X("max_dist:Q", bin=alt.Bin(maxbins=50), title="Trip distance (km)"),
+        y="count()",
+    )
+    .properties(title="Number of trips by distance")
+)
+rule = (
+    alt.Chart(trips_line_hist_df)
+    .mark_rule(color="red")
+    .encode(x="mean(max_dist):Q", size=alt.value(5))
+)
+
+(stops_cnt_trips_hist + rule).save(
+    os.path.join("Figures", data_version, "dist_hist.png")
+)
 
 print(f"Median trip distance is {trips_line['max_dist'].median():.2f} km.")
 
