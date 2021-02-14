@@ -144,7 +144,12 @@ print(
 )
 
 CSD_within_CSD_ax = GVA_CSD_cmt_dest.plot(
-    figsize=(20, 20), alpha=0.5, column="prop_within_CSD", cmap="OrRd", legend=True
+    figsize=(20, 20),
+    alpha=0.5,
+    column="prop_within_CSD",
+    cmap="OrRd",
+    legend=True,
+    legend_kwds={"shrink": 0.5},
 )
 CSD_within_CSD_ax.set_xlim(GVA_map_xlim_lower, GVA_map_xlim_higher)
 CSD_within_CSD_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
@@ -326,6 +331,7 @@ DA_cmt_duration_ax = GVA_DA_cmt_duration.plot(
     column="med_commute_duration",
     cmap="OrRd",
     legend=True,
+    legend_kwds={"shrink": 0.5},
 )
 DA_cmt_duration_ax.set_xlim(GVA_map_xlim_lower, GVA_map_xlim_higher)
 DA_cmt_duration_ax.set_ylim(GVA_map_ylim_lower, GVA_map_ylim_higher)
