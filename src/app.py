@@ -46,15 +46,6 @@ scale_widget = dcc.Slider(
     value=0.1,
 )
 
-GVA_map = dcc.Graph(
-    id="GVA_map",
-    style={
-        "border-width": "0",
-        "width": "100%",
-        "height": "50vh",
-    },
-)
-
 priority_widget = dcc.Slider(
     id="priority_widget",
     min=0.01,
@@ -176,7 +167,16 @@ app.layout = dbc.Container(
                                 ),
                                 dbc.Col(
                                     [
-                                        GVA_map,
+                                        dcc.Loading(
+                                            children=dcc.Graph(
+                                                id="GVA_map",
+                                                style={
+                                                    "border-width": "0",
+                                                    "width": "100%",
+                                                    "height": "50vh",
+                                                },
+                                            )
+                                        ),
                                     ]
                                 ),
                             ]
@@ -275,7 +275,7 @@ def display_choropleth(scenario, scale, priority):
         hover_data={
             "Priority": True,
             "Population": ":.0f",
-            "Area(km2)": ":.0f",
+            "Area(km2)": ":.2f",
         },
     )
     fig.update_layout(
