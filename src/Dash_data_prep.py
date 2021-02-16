@@ -40,6 +40,24 @@ df_full = geopandas.read_file(
 )
 X = df_full.drop(["prop_public"], axis=1)
 
+# Obtain CSD names
+GVA_DA_cmt_usage = geopandas.read_file(
+    os.path.join("Data_Tables", data_version, "GVA_DA_cmt_usage.json")
+)
+CSD_unique = pd.DataFrame(
+    GVA_DA_cmt_usage[["CSDNAME", "CSDUID", "DAUID"]]
+    .groupby(["CSDNAME", "CSDUID"])
+    .agg(["count"])
+    .to_records()
+)
+CSD_unique.columns = ["CSDNAME", "CSDUID", "count"]
+CSD_unique = CSD_unique.loc[CSD_unique["count"] >= 23]
+
+CSD_dict = {
+    CSDUID: list(CSD_unique.loc[CSD_unique["CSDUID"] == CSDUID, "CSDNAME"])[0]
+    for CSDUID in CSD_unique["CSDUID"]
+}
+
 # Read in preprocessor and model
 (
     preprocessor,
@@ -100,4 +118,8 @@ gdf_toDash = gdf_toDash.to_crs(epsg=4326)
 gdf_toDash.to_file(
     os.path.join("Data_Tables", "Dash_data", "gdf_toDash.json"),
     driver="GeoJSON",
+)
+
+json.dump(
+    CSD_dict, open(os.path.join("Data_Tables", "Dash_data", "CSD_dict.json"), "w")
 )
