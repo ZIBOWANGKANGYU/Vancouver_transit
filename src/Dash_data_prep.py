@@ -38,9 +38,7 @@ X_train = geopandas.read_file(os.path.join("Data_Tables", data_version, "X_train
 df_full = geopandas.read_file(
     os.path.join("Data_Tables", data_version, "GVA_DA_Modeling.json")
 )
-y = df_full["prop_public"]
 X = df_full.drop(["prop_public"], axis=1)
-
 
 # Read in preprocessor and model
 (
@@ -89,13 +87,14 @@ for policy_mag in [0.05, 0.1, 0.15, 0.2, 0.3]:
 
 # Save data
 preds = pd.DataFrame(preds)
-preds.to_pickle(os.path.join("Data_Tables", "Dash_data", "preds.json"), protocol=4)
 
 X = pd.concat([X, preds], axis=1)
-X_toDash = X[["DAUID", "vn13", "vn19", "NBA_services_PC", "geometry"] + colnames]
-X_toDash = X_toDash.to_crs(epsg=4326)
+gdf_toDash = X[["DAUID", "vn13", "vn19", "NBA_services_PC", "geometry"] + colnames]
+gdf_toDash = gdf_toDash.copy()
+gdf_toDash["prop_public"] = df_full["prop_public"]
+gdf_toDash = gdf_toDash.to_crs(epsg=4326)
 
-X_toDash.to_file(
-    os.path.join("Data_Tables", "Dash_data", "X_toDash.json"),
+gdf_toDash.to_file(
+    os.path.join("Data_Tables", "Dash_data", "gdf_toDash.json"),
     driver="GeoJSON",
 )
