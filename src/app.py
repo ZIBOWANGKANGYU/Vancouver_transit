@@ -26,6 +26,69 @@ geo_df = geopandas.GeoDataFrame.from_features(
 # Define app
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
+# Control panel
+scenario_widget = dcc.RadioItems(
+    id="scenario_widget",
+    options=[
+        {"label": "Scenario 1 (increase by same percentage point)", "value": "Sce1"},
+        {"label": "Scenario 2 (increase by same percent)", "value": "Sce2"},
+    ],
+    value="Sce1",
+    labelStyle={"display": "block"},
+)
+
+scale_widget = dcc.Slider(
+    id="scale_widget",
+    min=0.05,
+    max=0.3,
+    step=None,
+    marks={0.05: "5%", 0.1: "10%", 0.15: "15%", 0.2: "20%", 0.3: "30%"},
+    value=0.1,
+)
+
+GVA_map = dcc.Graph(
+    id="GVA_map",
+    style={
+        "border-width": "0",
+        "width": "100%",
+        "height": "50vh",
+    },
+)
+
+priority_widget = dcc.Slider(
+    id="priority_widget",
+    min=0.01,
+    max=0.3,
+    step=0.01,
+    marks={0.05: "5%", 0.1: "10%", 0.15: "15%", 0.2: "20%", 0.25: "25%", 0.3: "30%"},
+    value=0.1,
+)
+
+# Explaner
+explaner = dcc.Markdown(
+    """
+    This application shows areas which Greater Vancouver Area's (GVA) public transit authority should prioritize in developing new public transportation services. 
+    Users can customize their queries with three policy options:
+
+    #### Percentage of neighborhoods to priortize
+    We assume that the transit authority's resources are limited, and thus can only increase transit services in a limited number of neighborhoods, which are defined as dissemination areas (DAs) in Canada's 2016 census. 
+    Priority areas should be DAs where a fixed amount of increase in transit access leads to the most increase in proportion of people using transit.
+
+    #### Type of transit service increase
+    The research has specified two scenarios of transit service increase in priority areas.
+
+    In the first scenario, each DA’s number of accessible transit services per capita is increased by a fixed amount. This fixed amount should be equal to a specified proportion of average current number of accessible transit services per capita of all DAs in GVA.
+    For example, at present, there are 12 transit services accessible per resident in average for all DAs in GVA. If "Magnitude of transit service increase" (explained in the next section) is set to 0.1, then the number of accessible transit services per capita will be increased by 1.2 for each and every priority DAs.
+
+    In the second scenatio, each DA's number of accessible transit services per capita is increased by a fixed proportion. 
+    For example, for a DA that currently has 20 transit services accessible per resident, if we set "Magnitude of transit service increase" to be 20%, this DA's new number of transit services accessible per resident will be 24. 
+    By contrast, for a DA that currently has 5 transit services accessible per resident, this DA's new number of transit services accessible per resident will be 6, under the same "Magnitude of transit service increase" being 20%.
+
+    #### Magnitude of transit service increase
+    We believe that in the above two hypothetical scenarios, the number of transit services accessible should only be increased in a modest way for our model to be largely valid. Therefore, possible magnitudes is set between 5% and 30%. 
+    """
+)
+
 server = app.server
 
 app.layout = dbc.Container(
@@ -34,49 +97,148 @@ app.layout = dbc.Container(
             [
                 dbc.Tab(
                     [
-                        html.H1(
-                            "Public Transportation Development Priorities in Greater Vancouver: A Machine Learning Approach",
-                            style={
-                                "padding": 20,
-                                "text-align": "center",
-                                "border-radius": 3,
-                            },
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    [
+                                        html.H1(
+                                            "Public Transportation Development Priorities in Greater Vancouver: A Machine Learning Approach",
+                                            style={
+                                                "color": "white",
+                                                "text-align": "center",
+                                                "font-size": "48px",
+                                            },
+                                        ),
+                                        html.P(
+                                            "App Developed by Mark Wang",
+                                            style={
+                                                "color": "white",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "backgroundColor": "steelblue",
+                                        "border-radius": 3,
+                                        "padding": 15,
+                                        "margin-top": 20,
+                                        "margin-bottom": 25,
+                                        "margin-right": 15,
+                                    },
+                                )
+                            ]
                         ),
-                        html.P("App Developed by Mark Wang"),
-                        dcc.RadioItems(
-                            id="model_widget",
-                            options=[
-                                {"label": "Random Forest", "value": "rf"},
-                                {
-                                    "label": "LASSO",
-                                    "value": "LASSO",
-                                },
-                            ],
-                            value="RF",
-                            labelStyle={"display": "block"},
+                        html.Hr(),
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    [
+                                        html.H4("Policy options"),
+                                        html.Br(),
+                                        dbc.Card(
+                                            [
+                                                dbc.CardHeader(
+                                                    "Percentage of neighborhoods to priortize"
+                                                ),
+                                                dbc.CardBody(
+                                                    priority_widget,
+                                                ),
+                                            ]
+                                        ),
+                                        html.Br(),
+                                        dbc.Card(
+                                            [
+                                                dbc.CardHeader(
+                                                    "Type of transit service increase"
+                                                ),
+                                                dbc.CardBody(
+                                                    scenario_widget,
+                                                ),
+                                            ]
+                                        ),
+                                        html.Br(),
+                                        dbc.Card(
+                                            [
+                                                dbc.CardHeader(
+                                                    "Magnitude of transit service increase"
+                                                ),
+                                                dbc.CardBody(
+                                                    scale_widget,
+                                                ),
+                                            ]
+                                        ),
+                                    ],
+                                    md=3,
+                                    style={
+                                        "background-color": "#e6e6e6",
+                                        "padding": 20,
+                                        "border-radius": 3,
+                                    },
+                                ),
+                                dbc.Col(
+                                    [
+                                        GVA_map,
+                                    ]
+                                ),
+                            ]
                         ),
-                        dcc.Graph(
-                            id="map_snapshot",
-                            style={
-                                "border-width": "0",
-                                "width": "100%",
-                                "height": "50vh",
-                            },
+                        html.Hr(),
+                        dcc.Markdown(
+                            """
+                        This application is developed by Mark Wang. 
+                        It is based on research project: Demographic Characters and Access to Public Transit in Greater Vancouver: Analyses and Recommendations. 
+                        
+                        A high-level summary of the research can be found [here](https://zibowangkangyu.github.io/Vancouver_transit_summary/).
+
+                        A series of in-depth posts about this project include [data sources](https://zibowangkangyu.github.io/Vancouver_transit1/), [key variables](https://zibowangkangyu.github.io/Vancouver_transit2/), [machine learning modeling](https://zibowangkangyu.github.io/Vancouver_transit3/), and [model analyses and recommendations](https://zibowangkangyu.github.io/Vancouver_transit4/).
+
+                        For the Jupyter Notebook with full analysIs, please see [here](https://nbviewer.jupyter.org/github/ZIBOWANGKANGYU/Vancouver_transit/blob/master/Report.ipynb). The GitHub repo of this analysis is located [here](https://github.com/ZIBOWANGKANGYU/Vancouver_transit).  
+                        """
                         ),
                     ],
                     label="Main page",
                 ),
                 dbc.Tab(
                     [
-                        html.H1(
-                            "Public Transportation Development Priorities in Greater Vancouver: A Machine Learning Approach",
+                        dbc.Col(
+                            [
+                                html.H1(
+                                    "Public Transportation Development Priorities in Greater Vancouver: A Machine Learning Approach",
+                                    style={
+                                        "color": "white",
+                                        "text-align": "center",
+                                        "font-size": "48px",
+                                    },
+                                ),
+                                html.P(
+                                    "App Developed by Mark Wang",
+                                    style={
+                                        "color": "white",
+                                    },
+                                ),
+                            ],
                             style={
-                                "padding": 20,
-                                "text-align": "center",
+                                "backgroundColor": "steelblue",
                                 "border-radius": 3,
+                                "padding": 15,
+                                "margin-top": 20,
+                                "margin-bottom": 25,
+                                "margin-right": 15,
                             },
                         ),
-                        html.P("App Developed by Mark Wang"),
+                        explaner,
+                        html.Hr(),
+                        dcc.Markdown(
+                            """
+                        This application is developed by Mark Wang. 
+                        It is based on research project: Demographic Characters and Access to Public Transit in Greater Vancouver: Analyses and Recommendations. 
+                        
+                        A high-level summary of the research can be found [here](https://zibowangkangyu.github.io/Vancouver_transit_summary/).
+
+                        A series of in-depth posts about this project include [data sources](https://zibowangkangyu.github.io/Vancouver_transit1/), [key variables](https://zibowangkangyu.github.io/Vancouver_transit2/), [machine learning modeling](https://zibowangkangyu.github.io/Vancouver_transit3/), and [model analyses and recommendations](https://zibowangkangyu.github.io/Vancouver_transit4/).
+
+                        For the Jupyter Notebook with full analysIs, please see [here](https://nbviewer.jupyter.org/github/ZIBOWANGKANGYU/Vancouver_transit/blob/master/Report.ipynb). The GitHub repo of this analysis is located [here](https://github.com/ZIBOWANGKANGYU/Vancouver_transit).  
+                        """
+                        ),
                     ],
                     label="About",
                 ),
@@ -87,24 +249,39 @@ app.layout = dbc.Container(
     style={"max-width": "95%"},
 )
 
+
 # Define elements
-### Map
+## Map
 @app.callback(
-    Output("map_snapshot", "figure"),
-    Input("model_widget", "value"),
+    Output("GVA_map", "figure"),
+    Input("scenario_widget", "value"),
+    Input("scale_widget", "value"),
+    Input("priority_widget", "value"),
 )
-def display_choropleth(model):
+def display_choropleth(scenario, scale, priority):
+    scale = str(scale)[2:]
+    col_selected = scenario + scale + "rf"
     px.set_mapbox_access_token(open(".mapbox_token").read())
+    geo_df["increase"] = geo_df[col_selected] - geo_df["pred_status_quo"]
+    geo_df["Priority"] = geo_df["increase"] > geo_df["increase"].quantile(1 - priority)
     fig = px.choropleth_mapbox(
         geo_df,
         locations=geo_df.index,
         geojson=geo_df.geometry,
-        color="NBA_services_PC",
+        color="Priority",
         mapbox_style="open-street-map",
         center={"lat": 49.25, "lon": -122.955},
         zoom=9,
+        hover_data={
+            "Priority": True,
+            "Population": ":.0f",
+            "Area(km2)": ":.0f",
+        },
     )
-    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    fig.update_layout(
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
+    )
     return fig
 
 

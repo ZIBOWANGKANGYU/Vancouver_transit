@@ -57,6 +57,7 @@ random_search_rf = joblib.load(
         "random_search_rf.joblib",
     )
 )
+
 ## Get predictions on whole dataset
 X_preprocessed = preprocessor.transform(X)
 X_pred_rf = random_search_rf.best_estimator_["rf_reg"].predict(X_preprocessed)
@@ -91,7 +92,9 @@ preds = pd.DataFrame(preds)
 X = pd.concat([X, preds], axis=1)
 gdf_toDash = X[["DAUID", "vn13", "vn19", "NBA_services_PC", "geometry"] + colnames]
 gdf_toDash = gdf_toDash.copy()
+gdf_toDash = gdf_toDash.rename(columns={"vn13": "Population", "vn19": "Area(km2)"})
 gdf_toDash["prop_public"] = df_full["prop_public"]
+gdf_toDash["pred_status_quo"] = X_pred_rf
 gdf_toDash = gdf_toDash.to_crs(epsg=4326)
 
 gdf_toDash.to_file(
