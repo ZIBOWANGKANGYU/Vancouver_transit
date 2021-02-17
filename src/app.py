@@ -328,7 +328,6 @@ def display_choropleth(scenario, scale, priority, select_all_CSD, CSD):
         geo_df_selected = geo_df.loc[geo_df["CSDUID"].isin(CSD)]
     else:
         geo_df_selected = geo_df
-    print(geo_df_selected.columns)
     fig = px.choropleth_mapbox(
         geo_df_selected,
         locations=geo_df_selected.index,
