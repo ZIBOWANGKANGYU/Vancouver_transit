@@ -24,9 +24,13 @@ geo_df = geopandas.GeoDataFrame.from_features(
     gdf_toDash.__geo_interface__["features"]
 ).set_index("DAUID")
 
-CSD_dict = json.load(
-    open(os.path.join("Data_Tables", "Dash_data", "CSD_dict.json"), "r")
+df_CSD_dict = pd.read_json(
+    open(os.path.join("Data_Tables", "Dash_data", "df_CSD_dict.json"), "r")
 )
+
+CSD_dict = df_CSD_dict.to_dict()
+
+CSD_dict = {str(CSDUID): CSD_dict[CSDUID][0] for CSDUID in CSD_dict.keys()}
 # Define app
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -324,11 +328,12 @@ def display_choropleth(scenario, scale, priority, select_all_CSD, CSD):
         geo_df_selected = geo_df.loc[geo_df["CSDUID"].isin(CSD)]
     else:
         geo_df_selected = geo_df
+    print(geo_df_selected.columns)
     fig = px.choropleth_mapbox(
         geo_df_selected,
         locations=geo_df_selected.index,
         geojson=geo_df_selected.geometry,
-        color="Priority",
+        color=geo_df_selected.Priority,
         mapbox_style="open-street-map",
         center={"lat": 49.25, "lon": -122.955},
         zoom=9,

@@ -6,5 +6,4 @@ dash_bootstrap_components
 plotly==4.14.3
 nbformat
 geopandas==0.8.1
-json
 pip

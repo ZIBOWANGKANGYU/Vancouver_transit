@@ -57,6 +57,7 @@ CSD_dict = {
     CSDUID: list(CSD_unique.loc[CSD_unique["CSDUID"] == CSDUID, "CSDNAME"])[0]
     for CSDUID in CSD_unique["CSDUID"]
 }
+df_CSD_dict = pd.DataFrame(CSD_dict, index=[0])
 
 # Read in preprocessor and model
 (
@@ -122,6 +123,4 @@ gdf_toDash.to_file(
     driver="GeoJSON",
 )
 
-json.dump(
-    CSD_dict, open(os.path.join("Data_Tables", "Dash_data", "CSD_dict.json"), "w")
-)
+df_CSD_dict.to_json(os.path.join("Data_Tables", "Dash_data", "df_CSD_dict.json"))
