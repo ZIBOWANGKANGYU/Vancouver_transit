@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
+import json
 import nbformat
 import plotly.graph_objects as go
 import plotly.express as px
@@ -23,10 +24,13 @@ geo_df = geopandas.GeoDataFrame.from_features(
     gdf_toDash.__geo_interface__["features"]
 ).set_index("DAUID")
 
+CSD_dict = json.load(
+    open(os.path.join("Data_Tables", "Dash_data", "CSD_dict.json"), "r")
+)
 # Define app
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-# Control panel
+# Control panels
 scenario_widget = dcc.RadioItems(
     id="scenario_widget",
     options=[
@@ -53,6 +57,34 @@ priority_widget = dcc.Slider(
     step=0.01,
     marks={0.05: "5%", 0.1: "10%", 0.15: "15%", 0.2: "20%", 0.25: "25%", 0.3: "30%"},
     value=0.1,
+)
+
+CSD_controller = html.Div(
+    [
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        dcc.Checklist(
+                            id="select_all_CSD",
+                            options=[{"label": "Select All", "value": 1}],
+                            value=[],
+                        )
+                    ]
+                ),
+            ]
+        ),
+        dcc.Dropdown(
+            id="CSD_widget",
+            value=list(CSD_dict.keys()),
+            placeholder="Select regions ...",
+            options=[
+                {"label": CSD_dict[CSDUID], "value": CSDUID}
+                for CSDUID in list(CSD_dict.keys())
+            ],
+            multi=True,
+        ),
+    ]
 )
 
 # Explaner
@@ -163,6 +195,28 @@ app.layout = dbc.Container(
                                         "background-color": "#e6e6e6",
                                         "padding": 20,
                                         "border-radius": 3,
+                                        "margin-right": 15,
+                                    },
+                                ),
+                                dbc.Col(
+                                    [
+                                        html.H4("Mapping options"),
+                                        html.Br(),
+                                        dbc.Card(
+                                            [
+                                                dbc.CardHeader(
+                                                    "Choose neighborhoods to see details"
+                                                ),
+                                                dbc.CardBody(CSD_controller),
+                                            ]
+                                        ),
+                                    ],
+                                    md=3,
+                                    style={
+                                        "background-color": "#e6e6e6",
+                                        "padding": 20,
+                                        "border-radius": 3,
+                                        "margin-right": 15,
                                     },
                                 ),
                                 dbc.Col(
@@ -257,17 +311,23 @@ app.layout = dbc.Container(
     Input("scenario_widget", "value"),
     Input("scale_widget", "value"),
     Input("priority_widget", "value"),
+    Input("select_all_CSD", "value"),
+    Input("CSD_widget", "value"),
 )
-def display_choropleth(scenario, scale, priority):
+def display_choropleth(scenario, scale, priority, select_all_CSD, CSD):
     scale = str(scale)[2:]
     col_selected = scenario + scale + "rf"
     px.set_mapbox_access_token(open(".mapbox_token").read())
     geo_df["increase"] = geo_df[col_selected] - geo_df["pred_status_quo"]
     geo_df["Priority"] = geo_df["increase"] > geo_df["increase"].quantile(1 - priority)
+    if select_all_CSD != 1:
+        geo_df_selected = geo_df.loc[geo_df["CSDUID"].isin(CSD)]
+    else:
+        geo_df_selected = geo_df
     fig = px.choropleth_mapbox(
-        geo_df,
-        locations=geo_df.index,
-        geojson=geo_df.geometry,
+        geo_df_selected,
+        locations=geo_df_selected.index,
+        geojson=geo_df_selected.geometry,
         color="Priority",
         mapbox_style="open-street-map",
         center={"lat": 49.25, "lon": -122.955},

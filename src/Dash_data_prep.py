@@ -108,7 +108,9 @@ for policy_mag in [0.05, 0.1, 0.15, 0.2, 0.3]:
 preds = pd.DataFrame(preds)
 
 X = pd.concat([X, preds], axis=1)
-gdf_toDash = X[["DAUID", "vn13", "vn19", "NBA_services_PC", "geometry"] + colnames]
+gdf_toDash = X[
+    ["DAUID", "CSDUID", "vn13", "vn19", "NBA_services_PC", "geometry"] + colnames
+]
 gdf_toDash = gdf_toDash.copy()
 gdf_toDash = gdf_toDash.rename(columns={"vn13": "Population", "vn19": "Area(km2)"})
 gdf_toDash["prop_public"] = df_full["prop_public"]
