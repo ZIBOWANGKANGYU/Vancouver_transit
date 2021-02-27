@@ -97,7 +97,7 @@ explaner = dcc.Markdown(
     This application shows areas which Greater Vancouver Area's (GVA) public transit authority should prioritize in developing new public transportation services. 
     Users can customize their queries with three policy options:
 
-    #### Percentage of neighborhoods to priortize
+    #### Percentage of neighborhoods to prioritize
     We assume that the transit authority's resources are limited, and thus can only increase transit services in a limited number of neighborhoods, which are defined as dissemination areas (DAs) in Canada's 2016 census. 
     Priority areas should be DAs where a fixed amount of increase in transit access leads to the most increase in proportion of people using transit.
 
@@ -107,7 +107,7 @@ explaner = dcc.Markdown(
     In the first scenario, each DA’s number of accessible transit services per capita is increased by a fixed amount. This fixed amount should be equal to a specified proportion of average current number of accessible transit services per capita of all DAs in GVA.
     For example, at present, there are 12 transit services accessible per resident in average for all DAs in GVA. If "Magnitude of transit service increase" (explained in the next section) is set to 0.1, then the number of accessible transit services per capita will be increased by 1.2 for each and every priority DAs.
 
-    In the second scenatio, each DA's number of accessible transit services per capita is increased by a fixed proportion. 
+    In the second scenario, each DA's number of accessible transit services per capita is increased by a fixed proportion. 
     For example, for a DA that currently has 20 transit services accessible per resident, if we set "Magnitude of transit service increase" to be 20%, this DA's new number of transit services accessible per resident will be 24. 
     By contrast, for a DA that currently has 5 transit services accessible per resident, this DA's new number of transit services accessible per resident will be 6, under the same "Magnitude of transit service increase" being 20%.
 
