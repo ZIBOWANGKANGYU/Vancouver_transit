@@ -115,46 +115,59 @@ explaner = dcc.Markdown(
     We believe that in the above two hypothetical scenarios, the number of transit services accessible should only be increased in a modest way for our model to be largely valid. Therefore, possible magnitudes is set between 5% and 30%. 
     """
 )
+# Project nformation
+project_info = dcc.Markdown(
+    """
+                        This application is developed by Mark Wang. 
+                        It is based on research project: Demographic Characters and Access to Public Transit in Greater Vancouver: Analyses and Recommendations. 
+                        
+                        A high-level summary of the research can be found [here](https://zibowangkangyu.github.io/Vancouver_transit_summary/).
+
+                        A series of in-depth posts about this project include [data sources](https://zibowangkangyu.github.io/Vancouver_transit1/), [key variables](https://zibowangkangyu.github.io/Vancouver_transit2/), [machine learning modeling](https://zibowangkangyu.github.io/Vancouver_transit3/), and [model analyses and recommendations](https://zibowangkangyu.github.io/Vancouver_transit4/).
+
+                        For the Jupyter Notebook with full analysIs, please see [here](https://nbviewer.jupyter.org/github/ZIBOWANGKANGYU/Vancouver_transit/blob/master/Report.ipynb). The GitHub repo of this analysis is located [here](https://github.com/ZIBOWANGKANGYU/Vancouver_transit).  
+                        """
+)
 
 server = app.server
 
 app.layout = dbc.Container(
     [
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        html.H1(
+                            "Public Transportation Development Priorities in Greater Vancouver: A Machine Learning Approach",
+                            style={
+                                "color": "white",
+                                "text-align": "center",
+                                "font-size": "48px",
+                            },
+                        ),
+                        html.P(
+                            "App Developed by Mark Wang",
+                            style={
+                                "color": "white",
+                            },
+                        ),
+                    ],
+                    style={
+                        "backgroundColor": "steelblue",
+                        "border-radius": 3,
+                        "padding": 15,
+                        "margin-top": 20,
+                        "margin-bottom": 25,
+                        "margin-right": 15,
+                    },
+                )
+            ]
+        ),
         dbc.Tabs(
             [
                 dbc.Tab(
                     [
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    [
-                                        html.H1(
-                                            "Public Transportation Development Priorities in Greater Vancouver: A Machine Learning Approach",
-                                            style={
-                                                "color": "white",
-                                                "text-align": "center",
-                                                "font-size": "48px",
-                                            },
-                                        ),
-                                        html.P(
-                                            "App Developed by Mark Wang",
-                                            style={
-                                                "color": "white",
-                                            },
-                                        ),
-                                    ],
-                                    style={
-                                        "backgroundColor": "steelblue",
-                                        "border-radius": 3,
-                                        "padding": 15,
-                                        "margin-top": 20,
-                                        "margin-bottom": 25,
-                                        "margin-right": 15,
-                                    },
-                                )
-                            ]
-                        ),
-                        html.Hr(),
+                        html.Br(),
                         dbc.Row(
                             [
                                 dbc.Col(
@@ -240,68 +253,21 @@ app.layout = dbc.Container(
                             ]
                         ),
                         html.Hr(),
-                        dcc.Markdown(
-                            """
-                        This application is developed by Mark Wang. 
-                        It is based on research project: Demographic Characters and Access to Public Transit in Greater Vancouver: Analyses and Recommendations. 
-                        
-                        A high-level summary of the research can be found [here](https://zibowangkangyu.github.io/Vancouver_transit_summary/).
-
-                        A series of in-depth posts about this project include [data sources](https://zibowangkangyu.github.io/Vancouver_transit1/), [key variables](https://zibowangkangyu.github.io/Vancouver_transit2/), [machine learning modeling](https://zibowangkangyu.github.io/Vancouver_transit3/), and [model analyses and recommendations](https://zibowangkangyu.github.io/Vancouver_transit4/).
-
-                        For the Jupyter Notebook with full analysIs, please see [here](https://nbviewer.jupyter.org/github/ZIBOWANGKANGYU/Vancouver_transit/blob/master/Report.ipynb). The GitHub repo of this analysis is located [here](https://github.com/ZIBOWANGKANGYU/Vancouver_transit).  
-                        """
-                        ),
+                        project_info,
                     ],
                     label="Main page",
                 ),
                 dbc.Tab(
                     [
-                        dbc.Col(
-                            [
-                                html.H1(
-                                    "Public Transportation Development Priorities in Greater Vancouver: A Machine Learning Approach",
-                                    style={
-                                        "color": "white",
-                                        "text-align": "center",
-                                        "font-size": "48px",
-                                    },
-                                ),
-                                html.P(
-                                    "App Developed by Mark Wang",
-                                    style={
-                                        "color": "white",
-                                    },
-                                ),
-                            ],
-                            style={
-                                "backgroundColor": "steelblue",
-                                "border-radius": 3,
-                                "padding": 15,
-                                "margin-top": 20,
-                                "margin-bottom": 25,
-                                "margin-right": 15,
-                            },
-                        ),
+                        html.Br(),
                         explaner,
                         html.Hr(),
-                        dcc.Markdown(
-                            """
-                        This application is developed by Mark Wang. 
-                        It is based on research project: Demographic Characters and Access to Public Transit in Greater Vancouver: Analyses and Recommendations. 
-                        
-                        A high-level summary of the research can be found [here](https://zibowangkangyu.github.io/Vancouver_transit_summary/).
-
-                        A series of in-depth posts about this project include [data sources](https://zibowangkangyu.github.io/Vancouver_transit1/), [key variables](https://zibowangkangyu.github.io/Vancouver_transit2/), [machine learning modeling](https://zibowangkangyu.github.io/Vancouver_transit3/), and [model analyses and recommendations](https://zibowangkangyu.github.io/Vancouver_transit4/).
-
-                        For the Jupyter Notebook with full analysIs, please see [here](https://nbviewer.jupyter.org/github/ZIBOWANGKANGYU/Vancouver_transit/blob/master/Report.ipynb). The GitHub repo of this analysis is located [here](https://github.com/ZIBOWANGKANGYU/Vancouver_transit).  
-                        """
-                        ),
+                        project_info,
                     ],
                     label="About",
                 ),
             ]
-        )
+        ),
     ],
     fluid=True,
     style={"max-width": "95%"},
